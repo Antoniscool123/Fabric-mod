@@ -1,0 +1,246 @@
+
+Welcome to Gradle 8.14!
+
+Here are the highlights of this release:
+ - Java 24 support
+ - GraalVM Native Image toolchain selection
+ - Enhancements to test reporting
+ - Build Authoring improvements
+
+For more details see https://docs.gradle.org/8.14/release-notes.html
+
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.14/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+
+> Configure project :
+Fabric Loom: 1.10.5
+:remapping 55 mods from modImplementation (java-api)
+
+> Task :probeApi
+MISS net.minecraft.util.Mth
+MISS net.minecraft.util.math.Mth
+MISS net.minecraft.client.model.EntityModel
+OK   net.minecraft.client.model.Model
+OK   net.minecraft.client.model.ModelPart
+OK   net.minecraft.client.render.entity.model.EntityModelLayer
+OK   net.minecraft.registry.entry.RegistryEntry
+MISS net.minecraft.registry.RegistryEntry
+OK   net.minecraft.registry.tag.DamageTypeTags
+MISS net.minecraft.entity.damage.DamageTypeTags
+OK   net.minecraft.world.PersistentState
+OK   net.minecraft.entity.boss.ServerBossBar
+OK   net.minecraft.entity.boss.BossBar
+OK   net.minecraft.world.explosion.Explosion
+OK   net.minecraft.world.World
+OK   net.minecraft.client.particle.SpriteProvider
+OK   net.minecraft.client.particle.SpriteBillboardParticle
+OK   net.minecraft.client.particle.ParticleFactory
+OK   net.minecraft.entity.ai.goal.RevengeGoal
+OK   net.minecraft.client.gui.widget.ButtonWidget
+OK   net.minecraft.client.gui.DrawContext
+OK   net.minecraft.client.option.KeyBinding
+OK   net.minecraft.client.util.InputUtil
+OK   net.minecraft.item.ArmorItem
+OK   net.minecraft.structure.rule.BlockMatchRuleTest
+OK   net.minecraft.world.gen.feature.OreFeatureConfig
+OK   net.minecraft.world.gen.placementmodifier.HeightRangePlacementModifier
+OK   net.minecraft.registry.tag.BlockTags
+OK   net.minecraft.util.math.random.Random
+MISS com.aetherius.util.Aeth
+NESTED net.minecraft.world.PersistentState: []
+NESTED net.minecraft.entity.boss.BossBar: [Color, Style]
+NESTED net.minecraft.world.explosion.Explosion: [DestructionType]
+NESTED net.minecraft.entity.Entity: [MoveEffect, PositionUpdater, RemovalReason]
+CAND OK   net.minecraft.util.math.MathHelper
+CAND MISS net.minecraft.util.MathHelper
+CAND MISS net.minecraft.util.math.Mth
+CAND MISS net.minecraft.util.Mth
+CAND MISS net.minecraft.client.model.EntityModel
+CAND OK   net.minecraft.client.model.Model
+CAND OK   net.minecraft.world.World$ExplosionSourceType
+CAND OK   net.minecraft.world.explosion.Explosion$DestructionType
+CAND OK   net.minecraft.world.PersistentStateManager
+CAND MISS net.minecraft.client.model.Model$1
+SIG === net.minecraft.world.PersistentStateManager
+  CTOR public net.minecraft.world.PersistentStateManager(java.io.File,com.mojang.datafixers.DataFixer)
+  METHOD public net.minecraft.world.PersistentState net.minecraft.world.PersistentStateManager.getOrCreate(java.util.function.Function,java.util.function.Supplier,java.lang.String)
+SIG === net.minecraft.client.model.Model
+  CTOR public net.minecraft.client.model.Model(java.util.function.Function)
+SIG === net.minecraft.entity.boss.BossBar
+  CTOR public net.minecraft.entity.boss.BossBar(java.util.UUID,net.minecraft.text.Text,net.minecraft.entity.boss.BossBar$Color,net.minecraft.entity.boss.BossBar$Style)
+  METHOD public net.minecraft.entity.boss.BossBar net.minecraft.entity.boss.BossBar.setDarkenSky(boolean)
+  METHOD public net.minecraft.entity.boss.BossBar net.minecraft.entity.boss.BossBar.setThickenFog(boolean)
+  METHOD public void net.minecraft.entity.boss.BossBar.setName(net.minecraft.text.Text)
+  METHOD public void net.minecraft.entity.boss.BossBar.setColor(net.minecraft.entity.boss.BossBar$Color)
+SIG === net.minecraft.world.World
+  CTOR protected net.minecraft.world.World(net.minecraft.world.MutableWorldProperties,net.minecraft.registry.RegistryKey,net.minecraft.registry.DynamicRegistryManager,net.minecraft.registry.entry.RegistryEntry,java.util.function.Supplier,boolean,boolean,long,int)
+  METHOD public net.minecraft.world.explosion.Explosion net.minecraft.world.World.createExplosion(net.minecraft.entity.Entity,net.minecraft.entity.damage.DamageSource,net.minecraft.world.explosion.ExplosionBehavior,double,double,double,float,boolean,net.minecraft.world.World$ExplosionSourceType,boolean)
+  METHOD public net.minecraft.world.explosion.Explosion net.minecraft.world.World.createExplosion(net.minecraft.entity.Entity,double,double,double,float,net.minecraft.world.World$ExplosionSourceType)
+  METHOD public net.minecraft.world.explosion.Explosion net.minecraft.world.World.createExplosion(net.minecraft.entity.Entity,double,double,double,float,boolean,net.minecraft.world.World$ExplosionSourceType)
+  METHOD public net.minecraft.world.explosion.Explosion net.minecraft.world.World.createExplosion(net.minecraft.entity.Entity,net.minecraft.entity.damage.DamageSource,net.minecraft.world.explosion.ExplosionBehavior,double,double,double,float,boolean,net.minecraft.world.World$ExplosionSourceType)
+  METHOD public net.minecraft.world.explosion.Explosion net.minecraft.world.World.createExplosion(net.minecraft.entity.Entity,net.minecraft.entity.damage.DamageSource,net.minecraft.world.explosion.ExplosionBehavior,net.minecraft.util.math.Vec3d,float,boolean,net.minecraft.world.World$ExplosionSourceType)
+CP-JAR minecraft-merged-59d2b11f07-1.20.1-net.fabricmc.yarn.1_20_1.1.20.1+build.10-v2.jar
+MODEL-PKG minecraft-merged-59d2b11f07-1.20.1-net.fabricmc.yarn.1_20_1.1.20.1+build.10-v2.jar: net/minecraft/client/model/ModelPart$Vertex.class, net/minecraft/client/model/ModelPart$CuboidConsumer.class, net/minecraft/client/model/ModelPart$Quad.class, net/minecraft/client/model/ModelPart$Cuboid.class, net/minecraft/client/model/ModelUtil.class, net/minecraft/client/model/Model.class, net/minecraft/client/model/ModelCuboidData.class, net/minecraft/client/model/ModelTransform.class, net/minecraft/client/model/Dilation.class, net/minecraft/client/model/ModelPartBuilder.class, net/minecraft/client/model/ModelPart.class, net/minecraft/client/model/TexturedModelData.class, net/minecraft/client/model/TextureDimensions.class, net/minecraft/client/model/ModelPartData.class, net/minecraft/client/model/ModelData.class
+ENTITYMODEL: net/minecraft/client/render/entity/model/AllayEntityModel.class, net/minecraft/client/render/entity/model/ArmorStandArmorEntityModel.class, net/minecraft/client/render/entity/model/ArmorStandEntityModel.class, net/minecraft/client/render/entity/model/BeeEntityModel.class, net/minecraft/client/render/entity/model/AxolotlEntityModel.class, net/minecraft/client/render/entity/model/BatEntityModel.class, net/minecraft/client/render/entity/model/BoatEntityModel.class, net/minecraft/client/render/entity/model/ChestBoatEntityModel.class, net/minecraft/client/render/entity/model/CatEntityModel.class, net/minecraft/client/render/entity/model/DonkeyEntityModel.class, net/minecraft/client/render/entity/model/ChestRaftEntityModel.class, net/minecraft/client/render/entity/model/CodEntityModel.class, net/minecraft/client/render/entity/model/ChickenEntityModel.class, net/minecraft/client/render/entity/model/BlazeEntityModel.class, net/minecraft/client/render/entity/model/CowEntityModel.class, net/minecraft/client/render/entity/model/DolphinEntityModel.class, net/minecraft/client/render/entity/model/CamelEntityModel.class, net/minecraft/client/render/entity/model/CreeperEntityModel.class, net/minecraft/client/render/entity/model/EndermiteEntityModel.class, net/minecraft/client/render/entity/model/DrownedEntityModel.class
+RENDER-MODEL-PKG: net/minecraft/client/render/entity/model/AnimalModel.class, net/minecraft/client/render/entity/model/SinglePartEntityModelWithChildTransform.class, net/minecraft/client/render/entity/model/CrossbowPosing.class, net/minecraft/client/render/entity/model/AllayEntityModel.class, net/minecraft/client/render/entity/model/ArmorStandArmorEntityModel.class, net/minecraft/client/render/entity/model/ModelWithArms.class, net/minecraft/client/render/entity/model/ArmorStandEntityModel.class, net/minecraft/client/render/entity/model/BeeEntityModel.class, net/minecraft/client/render/entity/model/AxolotlEntityModel.class, net/minecraft/client/render/entity/model/BatEntityModel.class, net/minecraft/client/render/entity/model/BoatEntityModel.class, net/minecraft/client/render/entity/model/AbstractZombieModel.class, net/minecraft/client/render/entity/model/ChestBoatEntityModel.class, net/minecraft/client/render/entity/model/BookModel.class, net/minecraft/client/render/entity/model/CatEntityModel.class, net/minecraft/client/render/entity/model/DonkeyEntityModel.class, net/minecraft/client/render/entity/model/ChestRaftEntityModel.class, net/minecraft/client/render/entity/model/CodEntityModel.class, net/minecraft/client/render/entity/model/TintableCompositeModel.class, net/minecraft/client/render/entity/model/ChickenEntityModel.class, net/minecraft/client/render/entity/model/TintableAnimalModel.class, net/minecraft/client/render/entity/model/BlazeEntityModel.class, net/minecraft/client/render/entity/model/CowEntityModel.class, net/minecraft/client/render/entity/model/DolphinEntityModel.class, net/minecraft/client/render/entity/model/CamelEntityModel.class, net/minecraft/client/render/entity/model/CreeperEntityModel.class, net/minecraft/client/render/entity/model/EndermiteEntityModel.class, net/minecraft/client/render/entity/model/DrownedEntityModel.class, net/minecraft/client/render/entity/model/EndermanEntityModel.class, net/minecraft/client/render/entity/model/EvokerFangsEntityModel.class, net/minecraft/client/render/entity/model/EntityModel.class, net/minecraft/client/render/entity/model/FrogEntityModel.class, net/minecraft/client/render/entity/model/FoxEntityModel.class, net/minecraft/client/render/entity/model/GiantEntityModel.class, net/minecraft/client/render/entity/model/GhastEntityModel.class, net/minecraft/client/render/entity/model/GoatEntityModel.class, net/minecraft/client/render/entity/model/GuardianEntityModel.class, net/minecraft/client/render/entity/model/ModelWithHead.class, net/minecraft/client/render/entity/model/SinglePartEntityModel.class, net/minecraft/client/render/entity/model/HorseEntityModel.class
+PS-IN minecraft-merged-59d2b11f07-1.20.1-net.fabricmc.yarn.1_20_1.1.20.1+build.10-v2.jar
+ENTITY gravity methods: [hasNoGravity()->boolean, setNoGravity(boolean)->void]
+ABSTRACT ChunkGenerator:
+  A int getSeaLevel()
+  A com.mojang.serialization.Codec getCodec()
+  A void populateEntities(net.minecraft.world.ChunkRegion)
+  A void carve(net.minecraft.world.ChunkRegion,long,net.minecraft.world.gen.noise.NoiseConfig,net.minecraft.world.biome.source.BiomeAccess,net.minecraft.world.gen.StructureAccessor,net.minecraft.world.chunk.Chunk,net.minecraft.world.gen.GenerationStep$Carver)
+  A void buildSurface(net.minecraft.world.ChunkRegion,net.minecraft.world.gen.StructureAccessor,net.minecraft.world.gen.noise.NoiseConfig,net.minecraft.world.chunk.Chunk)
+  A java.util.concurrent.CompletableFuture populateNoise(java.util.concurrent.Executor,net.minecraft.world.gen.chunk.Blender,net.minecraft.world.gen.noise.NoiseConfig,net.minecraft.world.gen.StructureAccessor,net.minecraft.world.chunk.Chunk)
+  A int getWorldHeight()
+  A int getMinimumY()
+  A net.minecraft.world.gen.chunk.VerticalBlockSample getColumnSample(int,int,net.minecraft.world.HeightLimitView,net.minecraft.world.gen.noise.NoiseConfig)
+  A void getDebugHudText(java.util.List,net.minecraft.world.gen.noise.NoiseConfig,net.minecraft.util.math.BlockPos)
+  A int getHeight(int,int,net.minecraft.world.Heightmap$Type,net.minecraft.world.HeightLimitView,net.minecraft.world.gen.noise.NoiseConfig)
+API === net.minecraft.world.PersistentState
+  M writeNbt(NbtCompound) -> NbtCompound
+  M setDirty(boolean) -> void
+  M save(File) -> void
+  M isDirty() -> boolean
+  M markDirty() -> void
+API === net.minecraft.world.PersistentStateManager
+  M readNbt(String,int) -> NbtCompound
+  M get(Function,String) -> PersistentState
+  M set(String,PersistentState) -> void
+  M save() -> void
+  M getOrCreate(Function,Supplier,String) -> PersistentState
+API === net.minecraft.world.World
+  M getServer() -> MinecraftServer
+  M getBlockState(BlockPos) -> BlockState
+  M getDamageSources() -> DamageSources
+  M getFluidState(BlockPos) -> FluidState
+  M isInBuildLimit(BlockPos) -> boolean
+  M getOtherEntities(Entity,Box,Predicate) -> List
+  M sendPacket(Packet) -> void
+  M getWorldChunk(BlockPos) -> WorldChunk
+  M getChunk(int,int) -> Chunk
+  M getChunk(int,int) -> WorldChunk
+  M getChunk(int,int,ChunkStatus,boolean) -> Chunk
+  M isDebugWorld() -> boolean
+  M scheduleBlockRerenderIfNeeded(BlockPos,BlockState,BlockState) -> void
+  M updateListeners(BlockPos,BlockState,BlockState,int) -> void
+  M updateComparators(BlockPos,Block) -> void
+  M onBlockChanged(BlockPos,BlockState,BlockState) -> void
+  M removeBlock(BlockPos,boolean) -> boolean
+  M breakBlock(BlockPos,boolean,Entity,int) -> boolean
+  M addBlockBreakParticles(BlockPos,BlockState) -> void
+  M updateNeighborsAlways(BlockPos,Block) -> void
+  M updateNeighborsExcept(BlockPos,Block,Direction) -> void
+  M updateNeighbor(BlockPos,Block,BlockPos) -> void
+  M updateNeighbor(BlockState,BlockPos,Block,BlockPos,boolean) -> void
+  M replaceWithStateForNeighborUpdate(Direction,BlockState,BlockPos,BlockPos,int,int) -> void
+  M getTopY(Type,int,int) -> int
+  M getSeaLevel() -> int
+  M getLightingProvider() -> LightingProvider
+  M isDay() -> boolean
+  M getDimension() -> DimensionType
+  M isNight() -> boolean
+  M playSoundFromEntity(PlayerEntity,Entity,SoundEvent,SoundCategory,float,float) -> void
+  M playSoundFromEntity(PlayerEntity,Entity,RegistryEntry,SoundCategory,float,float,long) -> void
+  M playSoundAtBlockCenter(BlockPos,SoundEvent,SoundCategory,float,float,boolean) -> void
+  M addImportantParticle(ParticleEffect,double,double,double,double,double,double) -> void
+  M addImportantParticle(ParticleEffect,boolean,double,double,double,double,double,double) -> void
+  M getSkyAngleRadians(float) -> float
+  M addBlockEntityTicker(BlockEntityTickInvoker) -> void
+  M shouldTickBlockPos(BlockPos) -> boolean
+  M tickEntity(Consumer,Entity) -> void
+  M playSound(PlayerEntity,double,double,double,SoundEvent,SoundCategory,float,float,long) -> void
+  M playSound(PlayerEntity,double,double,double,RegistryEntry,SoundCategory,float,float,long) -> void
+  M playSound(PlayerEntity,double,double,double,SoundEvent,SoundCategory,float,float) -> void
+  M playSound(PlayerEntity,BlockPos,SoundEvent,SoundCategory,float,float) -> void
+  M playSound(Entity,BlockPos,SoundEvent,SoundCategory,float,float) -> void
+  M playSound(double,double,double,SoundEvent,SoundCategory,float,float,boolean) -> void
+  M addParticle(ParticleEffect,boolean,double,double,double,double,double,double) -> void
+  M addParticle(ParticleEffect,double,double,double,double,double,double) -> void
+  M getProfiler() -> Profiler
+  M getBlockEntity(BlockPos) -> BlockEntity
+  M setBlockState(BlockPos,BlockState,int) -> boolean
+  M setBlockState(BlockPos,BlockState,int,int) -> boolean
+  M setBlockState(BlockPos,BlockState) -> boolean
+  M shouldUpdatePostDeath(Entity) -> boolean
+  M shouldTickBlocksInChunk(long) -> boolean
+  M createExplosion(Entity,DamageSource,ExplosionBehavior,double,double,double,float,boolean,ExplosionSourceType,boolean) -> Explosion
+  M createExplosion(Entity,double,double,double,float,ExplosionSourceType) -> Explosion
+  M createExplosion(Entity,double,double,double,float,boolean,ExplosionSourceType) -> Explosion
+  M createExplosion(Entity,DamageSource,ExplosionBehavior,double,double,double,float,boolean,ExplosionSourceType) -> Explosion
+  M createExplosion(Entity,DamageSource,ExplosionBehavior,Vec3d,float,boolean,ExplosionSourceType) -> Explosion
+  M getGameRules() -> GameRules
+  M addBlockEntity(BlockEntity) -> void
+  M removeBlockEntity(BlockPos) -> void
+  M canSetBlock(BlockPos) -> boolean
+  M isDirectionSolid(BlockPos,Entity,Direction) -> boolean
+  M isTopSolid(BlockPos,Entity) -> boolean
+  M calculateAmbientDarkness() -> void
+  M getRainGradient(float) -> float
+  M getThunderGradient(float) -> float
+  M setMobSpawnOptions(boolean,boolean) -> void
+  M getSpawnPos() -> BlockPos
+  M getWorldBorder() -> WorldBorder
+  M getSpawnAngle() -> float
+  M isRaining() -> boolean
+  M isThundering() -> boolean
+  M getChunkAsView(int,int) -> BlockView
+  M getEntitiesByType(TypeFilter,Box,Predicate) -> List
+  M collectEntitiesByType(TypeFilter,Box,Predicate,List) -> void
+  M collectEntitiesByType(TypeFilter,Box,Predicate,List,int) -> void
+  M getEntityById(int) -> Entity
+  M canPlayerModifyAt(PlayerEntity,BlockPos) -> boolean
+  M sendEntityStatus(Entity,byte) -> void
+  M sendEntityDamage(Entity,DamageSource) -> void
+  M addSyncedBlockEvent(BlockPos,Block,int,int) -> void
+  M getLevelProperties() -> WorldProperties
+  M setThunderGradient(float) -> void
+  M setRainGradient(float) -> void
+  M hasRain(BlockPos) -> boolean
+  M getMapState(String) -> MapState
+  M putMapState(String,MapState) -> void
+  M getNextMapId() -> int
+  M syncGlobalEvent(int,BlockPos,int) -> void
+  M addDetailsToCrashReport(CrashReport) -> CrashReportSection
+  M setBlockBreakingInfo(int,BlockPos,int) -> void
+  M addFireworkParticle(double,double,double,double,double,double,NbtCompound) -> void
+  M getScoreboard() -> Scoreboard
+  M getLocalDifficulty(BlockPos) -> LocalDifficulty
+  M getAmbientDarkness() -> int
+  M setLightningTicksLeft(int) -> void
+  M getDimensionKey() -> RegistryKey
+  M getDimensionEntry() -> RegistryEntry
+  M getRegistryKey() -> RegistryKey
+  M testBlockState(BlockPos,Predicate) -> boolean
+  M testFluidState(BlockPos,Predicate) -> boolean
+  M getRecipeManager() -> RecipeManager
+  M getRandomPosInChunk(int,int,int,int) -> BlockPos
+  M isSavingDisabled() -> boolean
+  M getProfilerSupplier() -> Supplier
+  M getBiomeAccess() -> BiomeAccess
+  M getTickOrder() -> long
+  M getRegistryManager() -> DynamicRegistryManager
+  M getRandom() -> Random
+  M isClient() -> boolean
+  M close() -> void
+  M getTime() -> long
+  M isValid(BlockPos) -> boolean
+  M getTimeOfDay() -> long
+  M asString() -> String
+  M disconnect() -> void
+  M markDirty(BlockPos) -> void
+MODELCLASS net.minecraft.client.render.entity.model.EntityModel abstract=true supers=net.minecraft.client.model.Model
+  MCTOR protected net.minecraft.client.render.entity.model.EntityModel(java.util.function.Function)
+  MCTOR protected net.minecraft.client.render.entity.model.EntityModel()
+  MM public abstract void net.minecraft.client.render.entity.model.EntityModel.setAngles(net.minecraft.entity.Entity,float,float,float,float,float)
+  MM public void net.minecraft.client.render.entity.model.EntityModel.animateModel(net.minecraft.entity.Entity,float,float,float)
+  MM public void net.minecraft.client.render.entity.model.EntityModel.copyStateTo(net.minecraft.client.render.entity.model.EntityModel)
+MODELCLASS net.minecraft.client.model.Model abstract=true supers=java.lang.Object
+  MCTOR public net.minecraft.client.model.Model(java.util.function.Function)
+  MM public final net.minecraft.client.render.RenderLayer net.minecraft.client.model.Model.getLayer(net.minecraft.util.Identifier)
+  MM public abstract void net.minecraft.client.model.Model.render(net.minecraft.client.util.math.MatrixStack,net.minecraft.client.render.VertexConsumer,int,int,float,float,float,float)
+MODEL abstract=true 
+MODEL unavailable
+
+BUILD SUCCESSFUL in 48s
+1 actionable task: 1 executed
