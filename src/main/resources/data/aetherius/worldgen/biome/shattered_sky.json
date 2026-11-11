@@ -8,13 +8,15 @@
     "water_color": 4861826,
     "water_fog_color": 2759492,
     "mood_sound": {
-      "sound": "minecraft:ambient.crimson_forest.mood",
+      "sound": "minecraft:ambient.cave",
       "tick_delay": 6000,
       "block_search_extent": 8,
       "offset": 2.0
     }
   },
-  "carvers": [],
+  "carvers": {
+    "air": []
+  },
   "features": [
     [],
     [],

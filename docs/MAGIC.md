@@ -112,7 +112,7 @@ more point and the player backfires. Any Nox triple is a deliberate all-in, whic
 its cooldown is 300 ticks. In general the trio spells are gated by cooldown (200–320 ticks)
 rather than by cost alone.
 
-## 5. Spell table (19 registered)
+## 5. Spell table (18 registered + 1 fallback)
 
 Base spells (one school, one rune):
 
@@ -148,7 +148,8 @@ Trio spells (three runes — the "sentences"):
 | Forgeheart Transmutation | `terra+terra+sol` | Terra | 320 t | converts stone to ore veins |
 
 Fallback: any unrecognised sequence resolves to **Resonant Echo** (`caelum`, 120 t) — a cheap
-"the Weave shrugs" effect instead of a failed cast, so players always get feedback.
+"the Weave shrugs" effect instead of a failed cast, so players always get feedback. It is not
+part of the registry map, which is why startup logs 18 spells and the table above lists 18.
 
 ### Resolution rules
 1. Rune list is canonicalised (sorted by enum ordinal) before lookup — order never matters.

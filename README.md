@@ -15,7 +15,7 @@ without touching a GUI editor.
 
 ```
 Content:  131 Java files · ~12.6k lines · 13 blocks · 32 items · 10 entities
-          19 spells · 15 runes · 14 quests · 12 lore entries
+          18 spells (+fallback) · 15 runes · 14 quests · 12 lore entries
           3 biomes · 1 dimension · 5 particle types · 280 translation keys
 Assets:   48 generated textures · 65 block/item models · 45 data files
 ```
@@ -24,8 +24,8 @@ Assets:   48 generated textures · 65 block/item models · 45 data files
 
 ## Download & play
 
-1. Download **[aetherius-1.0.0-alpha.3.jar](https://github.com/Antoniscool123/Fabric-mod/releases/download/v1.0.0-alpha.3/aetherius-1.0.0-alpha.3.jar)**
-   (plus [`SHA256SUMS.txt`](https://github.com/Antoniscool123/Fabric-mod/releases/download/v1.0.0-alpha.3/SHA256SUMS.txt)).
+1. Download **[aetherius-1.0.0-alpha.4.jar](https://github.com/Antoniscool123/Fabric-mod/releases/download/v1.0.0-alpha.4/aetherius-1.0.0-alpha.4.jar)**
+   (plus [`SHA256SUMS.txt`](https://github.com/Antoniscool123/Fabric-mod/releases/download/v1.0.0-alpha.4/SHA256SUMS.txt)).
 2. Install **Fabric Loader 0.15.11+** for Minecraft **1.20.1**.
 3. Drop the jar **and** [Fabric API 0.92.2+1.20.1](https://modrinth.com/mod/fabric-api) into `.minecraft/mods`.
 4. Launch, create a world, and press **K** to open the Chronicle.
@@ -64,7 +64,9 @@ JDK 17 → Gradle 8.6 → Loom 1.5.8 → `compileJava` + `build` → attached to
 | Datapack content (dimension, biomes, loot, recipes, tags) | implemented |
 | Assets (textures, models, lang, sounds) | generated / placeholder-quality |
 | Compilation & packaging | **verified in CI** — JDK 17 / Gradle 8.6 / Loom 1.5.8, `compileJava` + `build` green, jar released |
-| Runtime (launch, gameplay balance) | **not yet verified** — no client has been run |
+| Runtime (launch) | **verified** — client boots, all 4 mixins apply, `[Aetherius] Initialised in 205 ms` |
+| Runtime (world load) | first attempt crashed on a biome JSON bug (fixed in `alpha.4`, see `docs/VERIFICATION.md` §0b) |
+| Gameplay balance | **not yet verified** |
 
 Packaging is real: the release jar is built by CI from this exact commit, with the mod's
 `fabric.mod.json` version expanded and every asset and datapack file inside. What is *not*
@@ -278,6 +280,7 @@ The asset pipeline is pure Python (no Pillow, no external downloads):
 | `tools/check_refs.py` | every `ModBlocks.X`/`ModItems.X`/… reference resolves to a declared field |
 | `tools/check_chronicle.py` | quest flags, objective classes, rune constants resolve |
 | `tools/check_lang.py` | translation keys used in Java exist in `en_us.json` |
+| `tools/check_data.py` | biome/dimension/model/sounds JSON shapes — encodes the bugs found at first launch |
 
 Run them all:
 
@@ -285,12 +288,14 @@ Run them all:
 python3 tools/generate_textures.py && python3 tools/generate_models.py \
   && python3 tools/generate_lang.py && python3 tools/generate_data.py
 python3 tools/check_java.py && python3 tools/check_refs.py \
-  && python3 tools/check_chronicle.py && python3 tools/check_lang.py
+  && python3 tools/check_chronicle.py && python3 tools/check_lang.py \
+  && python3 tools/check_api.py && python3 tools/check_data.py
 ```
 
 ## Known limitations
 
-- **Not compiled yet.** See `docs/VERIFICATION.md` for exactly what was and wasn't checked.
+- **Gameplay untested.** The client launches and the mod initialises, but no one has walked
+  through Act I end-to-end yet. See `docs/VERIFICATION.md` for exactly what was checked.
 - Textures and models are generated placeholders — readable silhouettes, not final art.
 - No custom sounds: `sounds.json` maps 14 events onto vanilla sound files.
 - Biome *injection* into vanilla worldgen needs TerraBlender or a datapack override; the

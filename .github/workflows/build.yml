@@ -44,6 +44,7 @@ jobs:
           python3 tools/check_chronicle.py
           python3 tools/check_lang.py
           python3 tools/check_api.py
+          python3 tools/check_data.py
 
       - name: Probe API symbols
         run: gradle probeApi --no-daemon --console=plain > probe.txt 2>&1 || true
@@ -135,7 +136,8 @@ jobs:
                    data/aetherius/dimension/shattered_sky.json \
                    data/aetherius/dimension_type/shattered_sky.json \
                    data/aetherius/worldgen/placed_feature/star_vein_ore.json \
-                   data/aetherius/loot_tables/blocks/star_vein_ore.json; do
+                   data/aetherius/loot_tables/blocks/star_vein_ore.json \
+                   assets/aetherius/sounds.json; do
             if grep -q " $p$" jar-contents.txt; then
               echo "ok      $p"
             else

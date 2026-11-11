@@ -35,13 +35,16 @@ def blockstate_cube_column(name, side=None, top=None, bottom=None):
                      "end": f"aetherius:block/{top}"}})
 
 
+def tex(name):
+    """Prefixes with the mod namespace unless the caller already gave one (e.g. minecraft:block/dirt)."""
+    return name if ":" in name else f"aetherius:block/{name}"
+
+
 def blockstate_cube_bottom_top(name, top, side, bottom):
     dump(f"blockstates/{name}.json", {"variants": {"": {"model": f"aetherius:block/{name}"}}})
     dump(f"models/block/{name}.json", {
         "parent": "minecraft:block/cube_bottom_top",
-        "textures": {"top": f"aetherius:block/{top}",
-                     "side": f"aetherius:block/{side}",
-                     "bottom": f"aetherius:block/{bottom}"}})
+        "textures": {"top": tex(top), "side": tex(side), "bottom": tex(bottom)}})
 
 
 def item_generated(name):

@@ -32,7 +32,7 @@ def biome(temperature, downfall, sky, fog, water, features, spawners=None, music
             "water_color": water,
             "water_fog_color": 0x2A1B44,
         },
-        "carvers": [],
+        "carvers": {"air": []},
         "features": features,
         "spawners": spawners or EMPTY_SPAWNERS,
         "spawn_costs": {},
@@ -115,8 +115,7 @@ def main():
     dump("worldgen/biome/starlit_meadows.json", biome(
         0.7, 0.8, 0x6FB7FF, 0xBBD9FF, 0x3C7FD1,
         eleven((4, ["aetherius:starlight_observatory"]),
-               (6, ["aetherius:mana_lily_patch"]),
-               (9, ["minecraft:patch_grass_badlands"])),
+               (6, ["aetherius:mana_lily_patch"])),
         spawners={**EMPTY_SPAWNERS,
                   "creature": [{"type": "aetherius:aether_manta", "weight": 8,
                                 "minCount": 1, "maxCount": 3}],
@@ -134,7 +133,7 @@ def main():
                                "minCount": 1, "maxCount": 3},
                               {"type": "aetherius:void_sentinel", "weight": 3,
                                "minCount": 1, "maxCount": 1}]},
-        music="minecraft:ambient.crimson_forest.mood"))
+        music="minecraft:ambient.cave"))
 
     dump("worldgen/biome/blighted_barrens.json", biome(
         1.1, 0.1, 0x2A1030, 0x3A1030, 0x5A1F3A,
@@ -144,7 +143,7 @@ def main():
                                "minCount": 2, "maxCount": 5},
                               {"type": "aetherius:void_specter", "weight": 12,
                                "minCount": 1, "maxCount": 3}]},
-        music="minecraft:ambient.basalt_deltas.mood"))
+        music="minecraft:ambient.cave"))
 
     # ---------------------------------------------------------------- loot
     dump("loot_tables/blocks/star_vein_ore.json", block_loot(
@@ -157,14 +156,7 @@ def main():
         dump(f"loot_tables/blocks/{name}.json", simple_self(name))
     dump("loot_tables/blocks/sky_rift_anchor.json", simple_self(
         "sky_rift_anchor", [("minecraft:crying_obsidian", 1, 2)]))
-    dump("loot_tables/blocks/sky_rift_portal.json", {"type": "minecraft:block", "pools": []})
 
-    # entity loot: wardens drop hearts (code also drops; table kept for datapack parity)
-    dump("loot_tables/entities/ember_warden.json", {
-        "type": "minecraft:entity", "pools": [{
-            "rolls": 1,
-            "entries": [{"type": "minecraft:item", "name": "aetherius:heart_of_sol"}]
-        }]})
 
     # ---------------------------------------------------------------- recipes
     def shaped(pattern, key, result, count=1):
@@ -212,8 +204,8 @@ def main():
                                {"G": "minecraft:gold_nugget", "L": "minecraft:glowstone",
                                 "A": "aetherius:aether_shard"}, "aetherius:rune_lantern", 2),
         "telescope": shaped([" AC", "ACC", "CCC"],
-                            {"A": "aetherius:aether_shard", "C": "minecraft:copper_ingot",
-                             "M": "minecraft:amethyst_shard"}, "aetherius:telescope"),
+                            {"A": "aetherius:aether_shard", "C": "minecraft:copper_ingot"},
+                            "aetherius:telescope"),
         "sky_rift_anchor": shaped(["CBC", "BAB", "CBC"],
                                   {"C": "minecraft:crying_obsidian",
                                    "B": "aetherius:aether_blood",
@@ -294,6 +286,35 @@ def main():
         height_range(60, 120),
         {"type": "minecraft:biome"},
     ]))
+
+    # ---------------------------------------------------------------- sounds
+    SOUND_EVENTS = {
+        "spell_sol": "item/firecharge_use",
+        "spell_luna": "entity/player/splash_high_speed",
+        "spell_terra": "block/deepslate/break",
+        "spell_caelum": "item/trident/thunder",
+        "spell_nox": "entity/warden/sonic_boom",
+        "spell_resonant": "block/amethyst_block/chime",
+        "spell_nova_warp": "entity/ender_dragon/growl",
+        "astral_backfire": "entity/generic/explode",
+        "chronicle_update": "ui/toast/challenge_complete",
+        "starfall": "entity/lightning_bolt/impact",
+        "boss_nox_roar": "entity/ender_dragon/growl",
+        "observatory_hum": "block/beacon/ambient",
+        "altar_purify": "block/beacon/activate",
+        "forge_strike": "block/anvil/use",
+    }
+    sounds = {}
+    for event, path in SOUND_EVENTS.items():
+        sounds[event] = {
+            "subtitle": f"aetherius.subtitle.{event}",
+            "sounds": [{"name": f"minecraft:{path}", "volume": 1.0, "pitch": 1.0}],
+        }
+    sounds_path = os.path.join(RES, "assets", "aetherius", "sounds.json")
+    os.makedirs(os.path.dirname(sounds_path), exist_ok=True)
+    with open(sounds_path, "w", encoding="utf-8") as fh:
+        json.dump(sounds, fh, indent=2)
+        fh.write("\n")
 
     # ---------------------------------------------------------------- tags
     pickaxe = [f"aetherius:{b}" for b in

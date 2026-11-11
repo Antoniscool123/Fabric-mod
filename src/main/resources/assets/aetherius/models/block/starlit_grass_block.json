@@ -3,6 +3,6 @@
   "textures": {
     "top": "aetherius:block/starlit_grass_block_top",
     "side": "aetherius:block/starlit_grass_block_side",
-    "bottom": "aetherius:block/minecraft:block/dirt"
+    "bottom": "minecraft:block/dirt"
   }
 }

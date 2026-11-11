@@ -14,7 +14,9 @@
       "offset": 2.0
     }
   },
-  "carvers": [],
+  "carvers": {
+    "air": []
+  },
   "features": [
     [],
     [],
@@ -29,9 +31,7 @@
     ],
     [],
     [],
-    [
-      "minecraft:patch_grass_badlands"
-    ],
+    [],
     []
   ],
   "spawners": {

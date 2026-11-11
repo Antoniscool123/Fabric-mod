@@ -22,6 +22,37 @@ checkers below, so a release cannot be published from a state that fails them.
 
 ---
 
+## 0b. First live run — 2026-11-11 (Windows 11, Prism 11.1.1, MC 1.20.1, Loader 0.20.1)
+
+A user launched `1.0.0-alpha.3` and clicked **Singleplayer**. What the log proved and what it
+broke:
+
+**Worked**
+
+- Client reached the main menu with Fabric API 0.92.12 loaded alongside the mod.
+- All four mixins applied — no `MixinApplyError`, so the `@Inject` targets are valid in 1.20.1.
+- `[Aetherius] Initialised in 205 ms - 18 spells, 14 quests, 12 lore entries`.
+- Registry sync, block/item/entity/particle registries and the model loader all started.
+
+**Broke (three bugs, all in the generated resources, none in Java)**
+
+| Symptom in the log | Cause | Fix |
+|---|---|---|
+| `Failed to parse aetherius:worldgen/biome/*.json` → `RuntimeException: Not a JSON object: []` | biomes emitted `"carvers": []`; 1.20.1 expects an object | `"carvers": {"air": []}` |
+| `aetherius:block/minecraft:block/dirt is not valid resource location` | the model generator prefixed `aetherius:block/` onto the vanilla `minecraft:block/dirt` texture | namespace-aware `tex()` helper |
+| 14 × `File minecraft:sounds/....ogg does not exist` | `sounds.json` used dotted event names instead of `assets/<ns>/sounds/` paths | generated sounds table with `minecraft:item/firecharge_use` style paths |
+
+The third bug was cosmetic (missing sound, no crash); the first was fatal — it aborted registry
+loading, which is why the crash happens when a world screen tries to build its
+`DynamicRegistryManager`. Note the second and third were *warnings* in an otherwise healthy
+reload, which is exactly why they are now gated in CI instead of being left to the game.
+
+**New guard:** `tools/check_data.py` validates biome `carvers`/`features`/`spawners` shapes,
+resource-location syntax (exactly one colon), model parent/texture references, blockstate
+variants, placed/configured feature structure, dimension and dimension-type required fields,
+and sounds.json path format. It runs before compile in CI, so a release can no longer ship any
+of the three bugs above.
+
 ## 1. What is verified (mechanically)
 
 | Check | Tool | Result |
