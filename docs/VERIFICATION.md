@@ -14,7 +14,7 @@ unverified.
 | Gradle | 8.6 (Loom 1.5 requires ≥ 8.3) |
 | Loom / Yarn | 1.5.8 / 1.20.1+build.10 |
 | Tasks | `compileJava` → `build` (remapJar, sourcesJar) |
-| Result | green; `aetherius-1.0.0-alpha.2.jar` + `-sources.jar` + `SHA256SUMS.txt` on the release |
+| Result | green; `aetherius-1.0.0-alpha.3.jar` + `-sources.jar` + `SHA256SUMS.txt` on the release |
 | Errors left | 0 (`-Xmaxerrs 500`, so nothing is hidden behind the 100-error default) |
 
 The compile run also regenerates every asset and datapack file and re-runs the static

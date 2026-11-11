@@ -115,6 +115,37 @@ jobs:
         if: env.GRADLE_EXIT == '0'
         run: gradle build --no-daemon --console=plain --stacktrace
 
+      - name: Verify jar contents
+        if: env.GRADLE_EXIT == '0'
+        run: |
+          set -e
+          JAR=$(ls build/libs/aetherius-*.jar | grep -v sources | head -1)
+          echo "checking $JAR"
+          unzip -l "$JAR" > jar-contents.txt
+          missing=0
+          for p in fabric.mod.json aetherius.mixins.json \
+                   com/aetherius/Aetherius.class com/aetherius/AetheriusClient.class \
+                   assets/aetherius/icon.png \
+                   assets/aetherius/lang/en_us.json \
+                   assets/aetherius/textures/block/star_vein_ore.png \
+                   assets/aetherius/textures/gui/mana_bar.png \
+                   assets/aetherius/models/block/sky_rift_portal.json \
+                   data/aetherius/dimension/shattered_sky.json \
+                   data/aetherius/dimension_type/shattered_sky.json \
+                   data/aetherius/worldgen/placed_feature/star_vein_ore.json \
+                   data/aetherius/loot_tables/blocks/star_vein_ore.json; do
+            if grep -q " $p$" jar-contents.txt; then
+              echo "ok      $p"
+            else
+              echo "MISSING $p"
+              missing=1
+            fi
+          done
+          echo "--- fabric.mod.json version field:"
+          unzip -p "$JAR" fabric.mod.json | grep '"version"'
+          echo "--- entry count: $(wc -l < jar-contents.txt)"
+          exit $missing
+
       - name: Checksums
         if: env.GRADLE_EXIT == '0'
         run: |

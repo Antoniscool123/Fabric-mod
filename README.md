@@ -24,7 +24,7 @@ Assets:   48 generated textures · 65 block/item models · 45 data files
 
 ## Download & play
 
-1. Grab **[aetherius-1.0.0-alpha.2.jar](https://github.com/Antoniscool123/Fabric-mod/releases)** from Releases
+1. Grab **[aetherius-1.0.0-alpha.3.jar](https://github.com/Antoniscool123/Fabric-mod/releases)** from Releases
    (a `SHA256SUMS.txt` is attached next to it).
 2. Install **Fabric Loader 0.15.11+** for Minecraft **1.20.1**.
 3. Drop the jar **and** [Fabric API 0.92.2+1.20.1](https://modrinth.com/mod/fabric-api) into `.minecraft/mods`.
