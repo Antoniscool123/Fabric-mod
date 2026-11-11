@@ -77,7 +77,7 @@ public class ChronicleScreen extends Screen {
                 .dimensions(this.width / 2 - 40, panelTop + panelHeight - 24, 80, 18).build());
 
         // Ask the server for a fresh snapshot every time the book opens.
-        ChronicleActionC2SPacket.send(ChronicleActionC2CPacket.ACTION_OPEN, "");
+        ChronicleActionC2SPacket.send(ChronicleActionC2SPacket.ACTION_OPEN, "");
 
         if (selected == null) {
             List<Quest> quests = ChronicleRegistry.questsFor(chapter);
@@ -311,7 +311,7 @@ public class ChronicleScreen extends Screen {
                     && mouseY >= bounds[1] && mouseY < bounds[1] + bounds[3]
                     && i < visibleQuests.size()) {
                 selected = visibleQuests.get(i);
-                ChronicleActionC2SPacket.send(ChronicleActionC2CPacket.ACTION_TRACK,
+                ChronicleActionC2SPacket.send(ChronicleActionC2SPacket.ACTION_TRACK,
                         selected.id().toString());
                 return true;
             }

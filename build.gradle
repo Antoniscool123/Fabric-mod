@@ -190,6 +190,14 @@ tasks.register('probeApi') {
                 }
             }
         }
+        try {
+            def cg = loader.loadClass('net.minecraft.world.gen.chunk.ChunkGenerator')
+            println 'ABSTRACT ChunkGenerator:'
+            cg.declaredMethods.findAll { m -> java.lang.reflect.Modifier.isAbstract(m.modifiers) }
+                    .each { m -> println "  A ${m.returnType.name} ${m.name}(${m.parameterTypes*.name.join(',')})" }
+        } catch (Throwable t) {
+            println 'ABSTRACT ChunkGenerator: unavailable'
+        }
         ['net.minecraft.world.PersistentState', 'net.minecraft.world.PersistentStateManager',
          'net.minecraft.world.World'].each { n ->
             try {
