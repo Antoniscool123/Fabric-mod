@@ -10,7 +10,7 @@ import com.aetherius.api.magic.MagicComponents;
 import com.aetherius.network.ChronicleActionC2SPacket;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.Button widget;
+import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
