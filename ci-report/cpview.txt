@@ -1,0 +1,3 @@
+== classpath
+== ChunkGenerator on real compile classpath
+== every ChunkGenerator class on classpath
