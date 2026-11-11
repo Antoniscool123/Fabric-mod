@@ -132,6 +132,23 @@ jobs:
               issue_number: issue, body
             });
 
+      - name: Publish diagnostics to the branch (readable without CI log access)
+        if: always()
+        run: |
+          mkdir -p ci-report
+          { echo "gradle exit: $GRADLE_EXIT"; echo; echo "--- errors ---";
+            grep -nE "\.java:[0-9]+: (error|warning):|^error:|FAILURE:|Caused by:" build.log | head -60; } > ci-report/errors.txt
+          cp cpview.txt ci-report/ 2>/dev/null || true
+          cp probe.txt ci-report/ 2>/dev/null || true
+          head -c 6000 symbols.txt > ci-report/symbols.txt 2>/dev/null || true
+          if git status --porcelain ci-report | grep -q .; then
+            git config user.name "ci-diagnostics"
+            git config user.email "ci@example.invalid"
+            git add ci-report
+            git commit -q -m "ci: build diagnostics [skip ci]" || true
+            git push origin "HEAD:${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}" || true
+          fi
+
       - name: Fail on compile errors
         if: env.GRADLE_EXIT != '0'
         run: exit 1
