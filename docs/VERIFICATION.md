@@ -52,7 +52,7 @@ When you do get a toolchain, run in this order and fix in this order — it fron
 failures that cascade:
 
 ```bash
-gradle wrapper --gradle-version 8.1.1   # binary wrapper JAR is not committed
+gradle wrapper --gradle-version 8.6   # binary wrapper JAR is not committed
 ./gradlew compileJava 2>&1 | tee build.log
 ```
 

@@ -52,11 +52,11 @@ before the first successful compile.
 
 ## Install & build
 
-Requirements: **JDK 17**, Gradle 8.x, and the Fabric toolchain that Loom downloads.
+Requirements: **JDK 17**, Gradle 8.6+, and the Fabric toolchain that Loom downloads.
 
 ```bash
 # one-time: the wrapper JAR is a binary and is not committed
-gradle wrapper --gradle-version 8.1.1
+gradle wrapper --gradle-version 8.6
 
 ./gradlew build          # jar lands in build/libs/aetherius-1.0.0-alpha.jar
 ./gradlew runClient      # dev client
