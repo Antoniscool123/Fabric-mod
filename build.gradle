@@ -156,11 +156,23 @@ tasks.register('probeApi') {
             def zf = null
             try {
                 zf = new java.util.zip.ZipFile(f)
-                def hits = zf.entries().findAll { e ->
+                def modelHits = zf.entries().findAll { e ->
                     e.name.startsWith('net/minecraft/client/model/') && e.name.endsWith('.class')
                 }.collect { it.name }
-                if (!hits.isEmpty()) {
-                    println "MODEL-PKG ${f.name}: " + hits.take(40).join(', ')
+                if (!modelHits.isEmpty()) {
+                    println "MODEL-PKG ${f.name}: " + modelHits.take(60).join(', ')
+                }
+                def entityModelHits = zf.entries().findAll { e ->
+                    e.name.endsWith('EntityModel.class') || e.name.contains('EntityModel\$')
+                }.collect { it.name }
+                if (!entityModelHits.isEmpty()) {
+                    println "ENTITYMODEL: " + entityModelHits.take(20).join(', ')
+                }
+                def renderModelHits = zf.entries().findAll { e ->
+                    e.name.startsWith('net/minecraft/client/render/entity/model/') && e.name.endsWith('.class')
+                }.collect { it.name }
+                if (!renderModelHits.isEmpty()) {
+                    println "RENDER-MODEL-PKG: " + renderModelHits.take(40).join(', ')
                 }
                 def ps = zf.entries().findAll { e ->
                     e.name == 'net/minecraft/world/PersistentState.class' ||
@@ -186,6 +198,18 @@ tasks.register('probeApi') {
                 }.each { m -> println "  M ${m.name}(${m.parameterTypes*.simpleName.join(',')}) -> ${m.returnType.simpleName}" }
             } catch (Throwable t) {
                 println "API ${n}: unavailable"
+            }
+        }
+        ['net.minecraft.client.render.entity.model.EntityModel',
+         'net.minecraft.client.model.Model'].each { n ->
+            try {
+                def c = loader.loadClass(n)
+                println "MODELCLASS ${n} abstract=${java.lang.reflect.Modifier.isAbstract(c.modifiers)} supers=${c.superclass?.name}"
+                c.declaredConstructors.each { ctor -> println "  MCTOR ${ctor}" }
+                c.declaredMethods.findAll { m -> !m.synthetic && m.name.length() > 2 }
+                        .take(12).each { m -> println "  MM ${m}" }
+            } catch (Throwable t) {
+                println "MODELCLASS ${n}: MISSING"
             }
         }
         try {

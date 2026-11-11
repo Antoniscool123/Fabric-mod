@@ -32,8 +32,8 @@ public class AetheriusWorldState extends PersistentState {
     public static final String ID = "aetherius_world_state";
     public static final int MAX_BLIGHT = 100;
 
-    public static final Type<AetheriusWorldState> TYPE = new Type<>(
-            AetheriusWorldState::new, AetheriusWorldState::fromNbt, null);
+    // 1.20.1 has no PersistentState.Type: state is registered through
+    // PersistentStateManager#getOrCreate(readFunction, factory, id).
 
     private final Map<Long, Integer> blight = new HashMap<>();
     private final List<BlockPos> observatories = new ArrayList<>();
@@ -45,7 +45,8 @@ public class AetheriusWorldState extends PersistentState {
 
     public static AetheriusWorldState get(ServerWorld world) {
         ServerWorld overworld = world.getServer().getOverworld();
-        return overworld.getPersistentStateManager().getOrCreate(TYPE, ID);
+        return overworld.getPersistentStateManager()
+                .getOrCreate(AetheriusWorldState::fromNbt, AetheriusWorldState::new, ID);
     }
 
     // ---- Blight -----------------------------------------------------------
