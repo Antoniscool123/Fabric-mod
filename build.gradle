@@ -191,6 +191,14 @@ tasks.register('probeApi') {
             }
         }
         try {
+            def ent = loader.loadClass('net.minecraft.entity.Entity')
+            println 'ENTITY gravity methods: ' + ent.declaredMethods.findAll { m ->
+                m.name.toLowerCase().contains('gravity') || m.name == 'travel'
+            }.collect { "${it.name}(${it.parameterTypes*.simpleName.join(',')})->${it.returnType.simpleName}" }
+        } catch (Throwable t) {
+            println 'ENTITY gravity methods: unavailable'
+        }
+        try {
             def cg = loader.loadClass('net.minecraft.world.gen.chunk.ChunkGenerator')
             println 'ABSTRACT ChunkGenerator:'
             cg.declaredMethods.findAll { m -> java.lang.reflect.Modifier.isAbstract(m.modifiers) }

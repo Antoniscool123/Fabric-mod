@@ -211,6 +211,30 @@ public class ShatteredSkyChunkGenerator extends ChunkGenerator {
     }
 
     @Override
+    public int getHeight(int x, int z, net.minecraft.world.Heightmap.Type heightmap,
+                         HeightLimitView world, NoiseConfig noiseConfig) {
+        if (heightmap == net.minecraft.world.Heightmap.Type.WORLD_SURFACE_WG
+                || heightmap == net.minecraft.world.Heightmap.Type.OCEAN_FLOOR_WG) {
+            return Math.max(world.getBottomY(), surfaceHeight(x, z, worldSeed()));
+        }
+        return Math.max(world.getBottomY(), surfaceHeight(x, z, worldSeed()) + 1);
+    }
+
+    @Override
+    public net.minecraft.world.gen.chunk.VerticalBlockSample getColumnSample(
+            int x, int z, HeightLimitView world, NoiseConfig noiseConfig) {
+        int bottom = world.getBottomY();
+        BlockState[] states = new BlockState[world.getHeight()];
+        int surface = surfaceHeight(x, z, worldSeed());
+        for (int i = 0; i < states.length; i++) {
+            states[i] = bottom + i <= surface
+                    ? ModBlocks.STAR_ASH.getDefaultState()
+                    : Blocks.AIR.getDefaultState();
+        }
+        return new net.minecraft.world.gen.chunk.VerticalBlockSample(bottom, states);
+    }
+
+    @Override
     public void buildSurface(ChunkRegion region, StructureAccessor structures,
                              NoiseConfig noiseConfig, Chunk chunk) {
         // Surface is authored in generateIslands; nothing to smooth here.
