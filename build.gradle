@@ -3,7 +3,7 @@
 //  Fabric Loom build script - Minecraft 1.20.1
 // =====================================================================
 plugins {
-    id 'fabric-loom' version '1.5-SNAPSHOT'
+    id 'fabric-loom' version '1.10.5'
     id 'maven-publish'
 }
 
