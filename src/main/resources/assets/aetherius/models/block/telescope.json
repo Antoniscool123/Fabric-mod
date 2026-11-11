@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "side": "aetherius:block/telescope",
+    "end": "aetherius:block/celestial_pillar_top"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "spell_sol":      { "sounds": [ { "name": "minecraft:item.firecharge.use" } ], "subtitle": "aetherius.subtitle.spell_sol" },
+  "spell_luna":     { "sounds": [ { "name": "minecraft:entity.player.splash.high_speed" } ], "subtitle": "aetherius.subtitle.spell_luna" },
+  "spell_terra":    { "sounds": [ { "name": "minecraft:block.deepslate.break" } ], "subtitle": "aetherius.subtitle.spell_terra" },
+  "spell_caelum":   { "sounds": [ { "name": "minecraft:item.trident.thunder" } ], "subtitle": "aetherius.subtitle.spell_caelum" },
+  "spell_nox":      { "sounds": [ { "name": "minecraft:entity.warden.sonic_boom" } ], "subtitle": "aetherius.subtitle.spell_nox" },
+  "spell_resonant": { "sounds": [ { "name": "minecraft:block.amethyst_block.chime" } ], "subtitle": "aetherius.subtitle.spell_resonant" },
+  "spell_nova_warp":{ "sounds": [ { "name": "minecraft:entity.ender_dragon.growl" } ], "subtitle": "aetherius.subtitle.spell_nova_warp" },
+  "astral_backfire":{ "sounds": [ { "name": "minecraft:entity.generic.explode" } ], "subtitle": "aetherius.subtitle.astral_backfire" },
+  "chronicle_update":{ "sounds": [ { "name": "minecraft:ui.toast.challenge_complete" } ], "subtitle": "aetherius.subtitle.chronicle_update" },
+  "starfall":       { "sounds": [ { "name": "minecraft:entity.lightning_bolt.impact" } ], "subtitle": "aetherius.subtitle.starfall" },
+  "boss_nox_roar":  { "sounds": [ { "name": "minecraft:entity.ender_dragon.growl" } ], "subtitle": "aetherius.subtitle.boss_nox_roar" },
+  "observatory_hum":{ "sounds": [ { "name": "minecraft:block.beacon.ambient" } ], "subtitle": "aetherius.subtitle.observatory_hum" },
+  "altar_purify":   { "sounds": [ { "name": "minecraft:block.beacon.activate" } ], "subtitle": "aetherius.subtitle.altar_purify" },
+  "forge_strike":   { "sounds": [ { "name": "minecraft:block.anvil.use" } ], "subtitle": "aetherius.subtitle.forge_strike" }
+}

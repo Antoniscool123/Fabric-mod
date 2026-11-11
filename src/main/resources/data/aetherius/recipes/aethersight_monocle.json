@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " A ",
+    "GAG",
+    " A "
+  ],
+  "key": {
+    "A": {
+      "item": "aetherius:aether_shard"
+    },
+    "G": {
+      "item": "minecraft:gold_ingot"
+    }
+  },
+  "result": {
+    "item": "aetherius:aethersight_monocle",
+    "count": 1
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_all",
+  "textures": {
+    "all": "aetherius:block/sky_rift_portal"
+  },
+  "render_type": "minecraft:translucent"
+}

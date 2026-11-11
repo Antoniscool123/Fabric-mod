@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "side": "aetherius:block/aether_altar_core",
+    "end": "aetherius:block/aether_altar_core_top"
+  }
+}

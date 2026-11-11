@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "aetherius:starlight_elixir"
+    },
+    {
+      "item": "aetherius:aether_blood"
+    }
+  ],
+  "result": {
+    "item": "aetherius:purified_starlight_elixir",
+    "count": 1
+  }
+}

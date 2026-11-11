@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "id": "aetherius",
+  "version": "${version}",
+  "name": "Aetherius: Echoes of the Shattered Sky",
+  "description": "A celestial magic and narrative overhaul: rune combinatorics, Astral Tension risk magic, chunk corruption, multi-block rites, a custom low-gravity dimension and the multi-phase Eclipse Dragon.",
+  "authors": [
+    "Aetherius Team"
+  ],
+  "contact": {
+    "homepage": "https://github.com/Antoniscool123/Fabric-mod",
+    "sources": "https://github.com/Antoniscool123/Fabric-mod"
+  },
+  "license": "MIT",
+  "icon": "assets/aetherius/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.aetherius.Aetherius"
+    ],
+    "client": [
+      "com.aetherius.AetheriusClient"
+    ]
+  },
+  "mixins": [
+    "aetherius.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.15.0",
+    "fabric-api": "*",
+    "minecraft": "~1.20.1",
+    "java": ">=17"
+  },
+  "suggests": {
+    "terrablender": "*"
+  }
+}

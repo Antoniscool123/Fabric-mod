@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " AC",
+    "ACC",
+    "CCC"
+  ],
+  "key": {
+    "A": {
+      "item": "aetherius:aether_shard"
+    },
+    "C": {
+      "item": "minecraft:copper_ingot"
+    },
+    "M": {
+      "item": "minecraft:amethyst_shard"
+    }
+  },
+  "result": {
+    "item": "aetherius:telescope",
+    "count": 1
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "lit=false": {
+      "model": "aetherius:block/aether_forge"
+    },
+    "lit=true": {
+      "model": "aetherius:block/aether_forge_lit"
+    }
+  }
+}
