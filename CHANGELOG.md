@@ -4,6 +4,25 @@ All notable changes to Aetherius: Echoes of the Shattered Sky.
 The mod is in alpha: versions are `1.0.0-alpha.N`, each one a playable checkpoint rather than a
 finished product. Jars are attached to the matching GitHub release.
 
+## [1.0.0-alpha.10] — 2026-11-11
+
+### Changed — ores and grass are vanilla-shaped now
+
+The first procedural pass made blocks from smooth value noise, which reads as "soft" next to
+vanilla art. The blocks a player sees next to vanilla content were rewritten as **vanilla-style
+pixel art**, keeping the mod's palette:
+
+| Texture | Structure now |
+|---|---|
+| `star_vein_ore`, `aether_blood_ore` | vanilla stone base (three-tone speckle, 2x2 pebbles) with 6 clusters of 2x2-4x3 crystal pixels: dark rim, solid body, one bright glint. The stone base deliberately uses vanilla stone tones, because these ores generate inside vanilla stone |
+| `starlit_grass_block_top` | vanilla grass layout — an even carpet with scattered tufts and a few star-bright pixels |
+| `starlit_grass_block_side` | vanilla dirt tones with the ragged 3-5 pixel grass lip, in starlit blue |
+| `star_ash` | vanilla gravel/sand structure: pale three-tone speckle with darker pebbles |
+
+Everything else keeps the noise-and-lighting treatment, which suits the mod's own blocks and items.
+`tools/texture_sheet.py` builds `docs/img/texture_sheet.png` (every texture at 5x) so the set can be
+reviewed in one image.
+
 ## [1.0.0-alpha.9] — 2026-11-11
 
 ### Fixed — the vanilla boss bar no longer sits under the custom one

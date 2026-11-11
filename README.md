@@ -24,8 +24,8 @@ Assets:   48 generated textures · 65 block/item models · 45 data files
 
 ## Download & play
 
-1. Download **[aetherius-1.0.0-alpha.9.jar](https://github.com/Antoniscool123/Fabric-mod/releases/download/v1.0.0-alpha.9/aetherius-1.0.0-alpha.9.jar)**
-   (plus [`SHA256SUMS.txt`](https://github.com/Antoniscool123/Fabric-mod/releases/download/v1.0.0-alpha.9/SHA256SUMS.txt)).
+1. Download **[aetherius-1.0.0-alpha.10.jar](https://github.com/Antoniscool123/Fabric-mod/releases/download/v1.0.0-alpha.10/aetherius-1.0.0-alpha.10.jar)**
+   (plus [`SHA256SUMS.txt`](https://github.com/Antoniscool123/Fabric-mod/releases/download/v1.0.0-alpha.10/SHA256SUMS.txt)).
 2. Install **Fabric Loader 0.15.11+** for Minecraft **1.20.1**.
 3. Drop the jar, [Fabric API 0.92.2+1.20.1](https://modrinth.com/mod/fabric-api) **and**
    [GeckoLib 4.8.4+1.20.1](https://modrinth.com/mod/geckolib/versions?g=1.20.1&loader=fabric)
@@ -104,7 +104,7 @@ Details and version pins: [`docs/OPTIONAL_MODS.md`](docs/OPTIONAL_MODS.md).
 | Client (HUD, boss bar, Chronicle screen, renderers, particles, keybinds) | implemented |
 | Registries, mixins, networking, commands | implemented |
 | Datapack content (dimension, biomes, loot, recipes, tags) | implemented |
-| Assets (textures, models, lang) | all 47 textures generated procedurally with tiling noise, shading and outlines; Nox'Thal is a GeckoLib model; audio is vanilla |
+| Assets (textures, models, lang) | all 47 textures generated procedurally in a vanilla-style pixel-art pass (ores, grass, stone, dirt, items); Nox'Thal is a GeckoLib model; audio is vanilla |
 | Compilation & packaging | **verified in CI** — JDK 17 / Gradle 8.14 / Loom 1.10.5, `compileJava` + `build` green, jar released |
 | Runtime (launch) | **verified** — client boots, all 4 mixins apply, `[Aetherius] Initialised in 205 ms` |
 | Runtime (world load) | first attempt crashed on a biome JSON bug (fixed in `alpha.4`, see `docs/VERIFICATION.md` §0b) |
@@ -323,7 +323,7 @@ The asset pipeline is pure Python (no Pillow, no external downloads):
 | `tools/check_chronicle.py` | quest flags, objective classes, rune constants resolve |
 | `tools/check_lang.py` | translation keys used in Java exist in `en_us.json` |
 | `tools/check_data.py` | biome/dimension/model/recipe JSON shapes — encodes the bugs found at first launch |
-| `docs/img/texture_sheet.png` | every generated texture at 5x, in one contact sheet — the fastest way to spot a texture that reads as mud |
+| `tools/texture_sheet.py` → `docs/img/texture_sheet.png` | every generated texture at 5x in one contact sheet — the review tool for the texture pass |
 | `tools/preview_model.py` | rasterises the GeckoLib `nox_thal.geo.json` (and any of its animations) to `docs/img/nox_thal_model.png` — catches broken pivots without launching the game |
 
 Run them all:
@@ -340,9 +340,10 @@ python3 tools/check_java.py && python3 tools/check_refs.py \
 
 - **Gameplay untested.** The client launches and the mod initialises, but no one has walked
   through Act I end-to-end yet. See `docs/VERIFICATION.md` for exactly what was checked.
-- Textures are procedurally generated (`tools/generate_textures.py`): tileable value noise for
-  material, a structural pass for the readable shapes, and a lighting pass (bevels on blocks,
-  outlines and highlights on items). They are consistent but they are not hand-painted pixel art.
+- Textures are procedurally generated (`tools/generate_textures.py`), in two idioms: blocks that
+  must sit next to vanilla ones (ore, grass, dirt, ash) use vanilla-style speckled pixel art on
+  vanilla-tone bases so they blend in, while the mod's own blocks and items get value-noise
+  material plus outline and highlight lighting. They are consistent but not hand-painted.
   The Nox'Thal model has an offline preview: `docs/img/nox_thal_model.png`
   (`python3 tools/preview_model.py`).
 - No custom audio files: every sound is an alias of a real vanilla `SoundEvents` constant, so

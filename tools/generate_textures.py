@@ -245,6 +245,117 @@ def put(img, x, y, color):
     return img
 
 
+
+# --------------------------------------------------------- vanilla-style pixel art
+def pixel_base(size, seed, palette, weights=None):
+    """
+    Salt-and-pepper fill, the way vanilla stone/dirt bases are made: every pixel picks one of
+    three or four tones, so the surface has texture without any gradient or visible noise field.
+    """
+    rnd = random.Random(seed)
+    weights = weights or [1.0] * len(palette)
+    img = blank(size, size)
+    for y in range(size):
+        for x in range(size):
+            img[y][x] = rnd.choices(palette, weights)[0]
+    return img
+
+
+def clump(img, seed, color, blobs=6, min_size=2, max_size=3):
+    """Sprinkle small solid clumps (vanilla dirt has these, so do gravel and stone)."""
+    rnd = random.Random(seed + 991)
+    size = len(img)
+    for _ in range(blobs):
+        w = rnd.randint(min_size, max_size)
+        h = rnd.randint(min_size, max_size)
+        x0 = rnd.randint(0, size - w)
+        y0 = rnd.randint(0, size - h)
+        for y in range(y0, y0 + h):
+            for x in range(x0, x0 + w):
+                img[y][x] = color
+    return img
+
+
+def ore_blob(img, x0, y0, w, h, rim, body, glint):
+    """One ore cluster: dark rim, solid body, a single bright pixel top-left (vanilla diamond)."""
+    for y in range(y0, y0 + h):
+        for x in range(x0, x0 + w):
+            if 0 <= y < len(img) and 0 <= x < len(img[0]):
+                edge = x == x0 or y == y0 or x == x0 + w - 1 or y == y0 + h - 1
+                img[y][x] = rim if edge else body
+    if 0 <= y0 + 1 < len(img) and 0 <= x0 + 1 < len(img[0]):
+        img[y0 + 1][x0 + 1] = glint
+    return img
+
+
+def vanilla_stone(size, seed, palette):
+    """Vanilla stone: three-tone speckle plus a few darker 2x2 pebbles."""
+    img = pixel_base(size, seed, palette, [0.42, 0.4, 0.18])
+    return clump(img, seed, palette[0], blobs=7, min_size=2, max_size=3)
+
+
+def vanilla_ore(size, seed, stone_palette, rim, body, glint, spots,
+                blob_sizes=((3, 2), (2, 2), (3, 3), (2, 3), (3, 2), (2, 2))):
+    """
+    Vanilla ore layout: stone base, then 5-7 hand-placed-looking clusters of crystal pixels.
+    Positions come from a seeded RNG but are kept on the 16x16 grid and never touch the border,
+    which is what makes vanilla ores read as "embedded" rather than "sprinkled".
+    """
+    img = vanilla_stone(size, seed, stone_palette)
+    rnd = random.Random(seed + 404)
+    used = []
+    for i in range(spots):
+        w, h = blob_sizes[i % len(blob_sizes)]
+        for _ in range(24):
+            x0 = rnd.randint(1, size - w - 1)
+            y0 = rnd.randint(1, size - h - 1)
+            if all(abs(x0 - ux) > 3 or abs(y0 - uy) > 3 for ux, uy in used):
+                used.append((x0, y0))
+                ore_blob(img, x0, y0, w, h, rim, body, glint)
+                break
+    return img
+
+
+def vanilla_grass_top(size, seed, palette):
+    """
+    Vanilla grass top: a mostly even carpet with a scattering of lighter and darker tufts,
+    no gradient. The mod's twist is a handful of star-bright pixels instead of plain highlights.
+    """
+    img = pixel_base(size, seed, palette, [0.30, 0.42, 0.22, 0.06])
+    rnd = random.Random(seed + 31)
+    for _ in range(14):
+        x = rnd.randint(0, size - 1)
+        y = rnd.randint(0, size - 1)
+        img[y][x] = palette[2]
+        if rnd.random() < 0.5 and y + 1 < size:
+            img[y + 1][x] = palette[1]
+    for _ in range(4):
+        img[rnd.randint(1, size - 2)][rnd.randint(1, size - 2)] = (206, 240, 255, 255)
+    return img
+
+
+def vanilla_grass_side(size, seed, dirt_palette, grass_palette):
+    """
+    Vanilla grass side: dirt speckle with a grass lip on top, and the lip has a ragged lower
+    edge - the two- or three-pixel fringe is the detail that makes a grass block recognisable.
+    """
+    img = pixel_base(size, seed, dirt_palette, [0.34, 0.4, 0.2, 0.06])
+    img = clump(img, seed, dirt_palette[0], blobs=8, min_size=2, max_size=3)
+    rnd = random.Random(seed + 77)
+    for x in range(size):
+        depth = 3 + (1 if rnd.random() < 0.45 else 0) + (1 if rnd.random() < 0.2 else 0)
+        for y in range(depth):
+            img[y][x] = rnd.choices(grass_palette, [0.35, 0.45, 0.2])[0]
+        if rnd.random() < 0.5:
+            img[depth][x] = grass_palette[1]
+        if rnd.random() < 0.25 and depth + 1 < size:
+            img[depth + 1][x] = grass_palette[0]
+    for x in range(size):
+        if rnd.random() < 0.3:
+            img[0][x] = grass_palette[2]
+    return img
+
+
 # ------------------------------------------------------------------ block textures
 def material_tile(size, seed, stops, cells=3, octaves=3, grain=0.35, grain_cells=8):
     """A block face: fbm ramp for the body plus a fine grain layer, beveled at the edges."""
@@ -258,87 +369,34 @@ def material_tile(size, seed, stops, cells=3, octaves=3, grain=0.35, grain_cells
 
 
 def ore_tile(size, seed, stone_stops, crystal_stops, clusters=5, glow=None):
-    """Stone with embedded crystal clusters: dark rim, body, bright facet, optional specular."""
-    img = material_tile(size, seed, stone_stops, 3, 3, 0.4, 9)
-    rnd = random.Random(seed)
-    for _ in range(clusters):
-        cx = rnd.randrange(2, size - 2)
-        cy = rnd.randrange(2, size - 2)
-        rx = rnd.uniform(1.4, 2.6)
-        ry = rx * rnd.uniform(0.7, 1.15)
-        for y in range(size):
-            for x in range(size):
-                d = math.hypot((x - cx) / rx, (y - cy) / ry)
-                if d > 1.0:
-                    continue
-                if d > 0.82:
-                    img[y][x] = ramp(crystal_stops, 0.12)
-                elif d > 0.45:
-                    img[y][x] = ramp(crystal_stops, 0.55)
-                else:
-                    img[y][x] = ramp(crystal_stops, 0.95)
-        if glow:
-            put(img, int(cx), int(cy), glow)
-    return bevel(img)
-
+    """Compatibility shim: old callers pass ramps, the rendering is now vanilla pixel art."""
+    stone_palette = [stone_stops[0][1], stone_stops[-1][1], shade(stone_stops[1][1], 0.86)]
+    rim = crystal_stops[0][1]
+    body = crystal_stops[1][1]
+    glint = crystal_stops[-1][1]
+    return vanilla_ore(size, seed, stone_palette, rim, body, glint, spots=clusters,
+                       blob_sizes=((3, 3), (4, 3), (3, 2), (2, 3), (3, 3), (4, 2), (2, 2)))
 
 def grass_top(size, seed):
-    """Starlit grass: deep teal clumps, lighter moss, a scatter of bright blades."""
-    img = blank(size, size)
-    for y in range(size):
-        for x in range(size):
-            clump = fbm(x, y, size, seed, 2, 3)
-            fine = fbm(x, y, size, seed + 91, 8, 2)
-            t = clump * 0.75 + fine * 0.25
-            img[y][x] = ramp([(0.0, (26, 62, 104, 255)), (0.35, (46, 104, 158, 255)),
-                              (0.7, (72, 146, 202, 255)), (1.0, (110, 190, 234, 255))], t)
-    rnd = random.Random(seed + 11)
-    for _ in range(12):
-        x = rnd.randrange(size)
-        y = rnd.randrange(size)
-        put(img, x, y, (150, 214, 248, 255))
-        if rnd.random() < 0.5:
-            put(img, x, y - 1, (198, 238, 255, 255))
-    for _ in range(5):
-        x, y = rnd.randrange(size), rnd.randrange(size)
-        put(img, x, y, (22, 52, 92, 255))
-    return vignette(bevel(img, 1.10, 0.86), 0.14)
+    """Starlit grass, vanilla layout: even blue-teal carpet with tufts and star-bright specks."""
+    palette = [(46, 104, 156, 255), (62, 132, 186, 255), (92, 168, 216, 255), (30, 74, 118, 255)]
+    return vanilla_grass_top(size, seed, palette)
 
 def grass_side(size, seed):
-    """Dirt face with a ragged starlit lip on top - the silhouette players read as 'grass'."""
-    dirt = [(0.0, (58, 42, 32, 255)), (0.5, (86, 64, 46, 255)), (1.0, (112, 86, 62, 255))]
-    img = material_tile(size, seed, dirt, 3, 3, 0.45, 8)
-    rnd = random.Random(seed + 5)
-    lip = [(0.0, (38, 84, 132, 255)), (0.6, (74, 146, 200, 255)), (1.0, (128, 200, 238, 255))]
-    for x in range(size):
-        depth = 3 + (1 if rnd.random() < 0.35 else 0) + (1 if rnd.random() < 0.15 else 0)
-        for y in range(depth):
-            img[y][x] = ramp(lip, 0.25 + 0.55 * fbm(x, y, size, seed + 90, 8, 2))
-        if rnd.random() < 0.4:
-            put(img, x, depth, shade(ramp(lip, 0.9), 0.9))
-    return bevel(img, 1.12, 0.84)
-
+    """Dirt face with the vanilla ragged grass lip on top, in starlit blue."""
+    dirt = [(134, 96, 67, 255), (150, 108, 74, 255), (121, 85, 58, 255), (163, 120, 84, 255)]
+    grass = [(44, 98, 148, 255), (62, 130, 182, 255), (102, 176, 222, 255)]
+    return vanilla_grass_side(size, seed, dirt, grass)
 
 def ash_tile(size, seed):
-    """Star-Ash: pale dunes with wind ripples, dark grit and a cold violet sheen."""
-    img = blank(size, size)
-    for y in range(size):
-        for x in range(size):
-            v = fbm(x, y, size, seed, 2, 3)
-            ripple = 0.5 + 0.5 * math.sin(y * 0.9 + fbm(x, y, size, seed + 17, 3, 2) * 5.0)
-            t = v * 0.7 + ripple * 0.3
-            img[y][x] = ramp([(0.0, (104, 100, 112, 255)), (0.4, (150, 146, 158, 255)),
-                              (0.75, (188, 184, 194, 255)), (1.0, (222, 218, 226, 255))], t)
-    rnd = random.Random(seed + 3)
-    for _ in range(8):
-        x, y = rnd.randrange(size), rnd.randrange(size)
-        img[y][x] = shade(img[y][x], 0.74)
-        if rnd.random() < 0.6:
-            put(img, x + 1, y, shade(img[y][x], 0.9))
+    """Star-Ash: vanilla gravel/sand structure - pale three-tone speckle with darker pebbles."""
+    palette = [(148, 144, 156, 255), (176, 172, 182, 255), (116, 112, 126, 255), (204, 200, 210, 255)]
+    img = pixel_base(size, seed, palette, [0.34, 0.38, 0.2, 0.08])
+    img = clump(img, seed, (100, 96, 110, 255), blobs=9, min_size=2, max_size=3)
+    rnd = random.Random(seed + 12)
     for _ in range(3):
-        x, y = rnd.randrange(size), rnd.randrange(size)
-        put(img, x, y, (176, 140, 232, 255))
-    return vignette(bevel(img, 1.10, 0.88), 0.12)
+        img[rnd.randint(1, size - 2)][rnd.randint(1, size - 2)] = (172, 136, 226, 255)
+    return img
 
 def pillar_side(size, seed):
     """Quartz column: fluted vertical grooves with light and shadow bands."""
@@ -1071,17 +1129,19 @@ def main():
         write_png(os.path.join(items, name + ".png"), 16, 16, img)
 
     # ---------------------------------------------------------------- blocks
-    stone_stops = [(0.0, (34, 30, 44, 255)), (0.5, (52, 46, 64, 255)), (1.0, (72, 64, 86, 255))]
+    # Ore textures are generated inside *vanilla stone*, so their base uses vanilla stone tones
+    # (slightly cooled) - an ore that sits on its own dark rock would look pasted on.
+    stone_stops = [(0.0, (108, 106, 116, 255)), (0.5, (132, 130, 140, 255)),
+                   (1.0, (152, 150, 160, 255))]
     save_block("star_vein_ore", ore_tile(
         16, 11, stone_stops,
-        [(0.0, (58, 30, 110, 255)), (0.6, (132, 78, 232, 255)), (1.0, (216, 176, 255, 255))],
-        clusters=5, glow=(255, 248, 255, 255)))
+        [(0.0, (62, 30, 116, 255)), (0.6, (140, 84, 240, 255)), (1.0, (226, 196, 255, 255))],
+        clusters=6))
 
-    blood_stone = [(0.0, (36, 26, 30, 255)), (0.5, (56, 40, 44, 255)), (1.0, (78, 56, 60, 255))]
     save_block("aether_blood_ore", ore_tile(
-        16, 12, blood_stone,
-        [(0.0, (72, 14, 34, 255)), (0.6, (176, 40, 78, 255)), (1.0, (255, 150, 178, 255))],
-        clusters=5, glow=(255, 226, 236, 255)))
+        16, 12, stone_stops,
+        [(0.0, (78, 16, 38, 255)), (0.6, (188, 44, 84, 255)), (1.0, (255, 168, 192, 255))],
+        clusters=6))
 
     save_block("star_ash", ash_tile(16, 13))
     save_block("starlit_grass_block_top", grass_top(16, 14))
