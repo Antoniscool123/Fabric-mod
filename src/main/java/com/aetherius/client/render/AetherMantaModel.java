@@ -2,7 +2,7 @@ package com.aetherius.client.render;
 
 import com.aetherius.entity.AetherMantaEntity;
 import com.aetherius.util.Aeth;
-import net.minecraft.client.model.EntityModel;
+import net.minecraft.client.render.entity.model.EntityModel;
 import net.minecraft.client.model.ModelData;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.model.ModelPartBuilder;
