@@ -10,10 +10,10 @@ This file records exactly what is checked, how, and what remains unverified.
 |---|---|
 | Workflow | `.github/workflows/build.yml` |
 | JDK | Temurin 17 |
-| Gradle | 8.6 (Loom 1.5 requires ≥ 8.3) |
+| Gradle | 8.14 (Loom 1.10 requires ≥ 8.11) |
 | Loom / Yarn | 1.5.8 / 1.20.1+build.10 |
 | Tasks | `compileJava` → `build` (remapJar, sourcesJar) |
-| Result | green; `aetherius-1.0.0-alpha.6.jar` + `-sources.jar` + `SHA256SUMS.txt` on the release |
+| Result | green; `aetherius-1.0.0-alpha.8.jar` + `-sources.jar` + `SHA256SUMS.txt` on the release |
 | Errors left | 0 (`-Xmaxerrs 500`, so nothing is hidden behind the 100-error default) |
 
 The compile run also regenerates every asset and datapack file and re-runs the static
@@ -124,6 +124,51 @@ brow, jaw, snout, crest and swept horns, four-bone wings with four membrane pane
 a three-segment tail with a vertical fin, and four two-bone legs that land exactly on the y = 24
 ground plane. Renderer scale is now 1.0 (the model is authored at true size), shadow radius 2.2.
 
+## 0e. `1.0.0-alpha.8` — GeckoLib migration and the Loom trap
+
+`alpha.7` fixed the codec crash and **compiled green in CI**, so the first attempt at the GeckoLib
+migration (`5a58c33`) was expected to be a compile-only change. It failed with a misleading error:
+
+```
+ShatteredSkyChunkGenerator.java:41: error: ShatteredSkyChunkGenerator is not abstract and does not
+override abstract method getColumnSample(int,int,HeightLimitView,NoiseConfig) in ChunkGenerator
+```
+
+The method was in fact implemented with exactly the signature `javap` reports for the mapped
+Minecraft jar, so the message was collateral. Reading the whole Gradle log (not just `error:` lines)
+gave the real cause:
+
+```
+Caused by: java.lang.IllegalStateException:
+  Mod was built with a newer version of Loom (1.10.5), you are using Loom (1.5.8)
+```
+
+GeckoLib 4.8.4 is published with Loom 1.10.5, and Loom refuses to remap a mod built with a **newer**
+Loom than the project's own. With the GeckoLib jar unreachable, Loom left the whole
+`modImplementation` classpath half-resolved and javac reported a bogus abstract-method error.
+
+Fix: `fabric-loom` `1.5-SNAPSHOT` → **`1.10.5`**, Gradle **8.14** (wrapper, CI and README), and the
+Cloudsmith repository restricted with `exclusiveContent { filter { includeGroup
+'software.bernie.geckolib' } }` so it can never serve a Minecraft/mapping artifact.
+
+CI after the bump (`97cd52f`): `compileJava` exit 0, jar assembled, jar gate verified, checksums
+written — **the first green build that contains GeckoLib code**.
+
+> **Lesson recorded:** a failure whose message points at the *last* good file is usually a
+> dependency-resolution failure. `grep "Caused by"` on the full log beats trusting the first
+> `error:` line.
+
+### What is still unverified in alpha.8
+
+GeckoLib compiles, but nothing has *run* yet:
+
+- `getTick(Object)`, the `AnimationController` transition length and the `RawAnimation` names are
+  compile-checked only; a wrong animation id would silently play nothing.
+- The `.geo.json` is verified by `tools/preview_model.py` (bones, pivots, silhouette, wing
+  symmetry) and by `tools/check_data.py` (every animated bone exists in the model), not by the game.
+- The `attack` triggerable animation is wired to the cosmic-breath attack; whether it fires and
+  blends back into flight was not observed.
+
 ## 1. What is verified (mechanically)
 
 | Check | Tool | Result |
@@ -169,7 +214,7 @@ When you do get a toolchain, run in this order and fix in this order — it fron
 failures that cascade:
 
 ```bash
-gradle wrapper --gradle-version 8.6   # binary wrapper JAR is not committed
+gradle wrapper --gradle-version 8.14   # binary wrapper JAR is not committed
 ./gradlew compileJava 2>&1 | tee build.log
 ```
 

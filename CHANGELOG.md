@@ -4,6 +4,51 @@ All notable changes to Aetherius: Echoes of the Shattered Sky.
 The mod is in alpha: versions are `1.0.0-alpha.N`, each one a playable checkpoint rather than a
 finished product. Jars are attached to the matching GitHub release.
 
+## [1.0.0-alpha.8] — 2026-11-11
+
+### Changed — the Nox'Thal is a GeckoLib model now
+
+The boss is no longer ~600 lines of hand-written cuboids. It is a Blockbench-style data model plus
+an animation file, which is what the user asked for after three passes of the Java model still not
+looking right in game.
+
+| Piece | Path |
+|---|---|
+| Model — 10 bones, 50 cubes, feet at y = 0, 3.19 blocks tall, 7-block wingspan | `assets/aetherius/geo/entity/nox_thal.geo.json` |
+| Animations — `flight`, `heavy_flight`, `grounded`, `supernova`, `attack` | `assets/aetherius/animations/entity/nox_thal.animation.json` |
+| `DefaultedEntityGeoModel` (head bone `head`) + `GeoEntityRenderer` (shadow 2.2, phase-3 roll in `preRender`) | `client/render/NoxThalGeoModel`, `NoxThalRenderer` |
+| `GeoEntity` implementation: `RawAnimation`s, instance cache, controller `"main"`, `triggerableAnim("attack", …)` fired by the cosmic breath | `entity/NoxThalEntity` |
+
+`NoxThalModel` (the `EntityModel` version) and its `EntityModelLayerRegistry` entry are gone.
+
+### Breaking — GeckoLib 4.8.4+ is now a hard dependency
+
+`fabric.mod.json` moved `geckolib` from `suggests` to `depends` (`">=4.8.0"`). A profile without it
+now fails with the normal Fabric "missing dependency" screen instead of crashing inside the
+renderer. **Install `geckolib-fabric-1.20.1-4.8.4.jar` (or newer 4.8.x) for 1.20.1.**
+
+### Fixed — the toolchain
+
+GeckoLib 4.8.4 is built with Fabric Loom 1.10.5, and Loom refuses to remap a mod built with a newer
+Loom than the project uses. The build failed with a misleading `ChunkGenerator` error until the log
+was read to the end (`Mod was built with a newer version of Loom (1.10.5), you are using Loom
+(1.5.8)`). Now: **Loom 1.10.5 + Gradle 8.14**, and the GeckoLib repository is restricted to its own
+group with `exclusiveContent`, so it can no longer shadow a Minecraft or mapping artifact.
+
+### Tooling
+
+- `tools/preview_model.py` was rewritten for the data model: it rasterises any `.geo.json` (with any
+  animation at any timestamp) to a PNG — `docs/img/nox_thal_model.png`, `docs/img/nox_thal_flight.png`.
+- `tools/check_data.py` gained `check_geo` and `check_animation`: every animated bone must exist in
+  the model, every keyframe must be a valid channel shape, and the geometry must carry a real uv
+  layout. 112 JSON files now validate before every build.
+- CI's jar gate also asserts that both GeckoLib assets are inside the release jar.
+
+### Still unverified
+
+GeckoLib compiles and packs, but no world has been loaded with `alpha.8` yet — see
+`docs/VERIFICATION.md` §0e.
+
 ## [1.0.0-alpha.7] — 2026-11-11
 
 ### Fixed — world creation crash (`Failed to load registries`)

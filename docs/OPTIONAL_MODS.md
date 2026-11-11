@@ -30,15 +30,29 @@ block loading.
 
 ## The animation-library question (GeckoLib)
 
-`GeckoLib` / `PlayerAnimator` would let the boss be authored in Blockbench with real per-bone
-rotation and smooth animation curves. That would look better than hand-placed boxes, but it makes
-GeckoLib a **hard dependency**: the jar would refuse to load without it, which breaks the "works
-with Fabric API only" rule this mod follows.
+**Decided in `alpha.8`: GeckoLib is now required.**
 
-If you want that trade, say so and it becomes a deliberate decision for a later release — with
-GeckoLib added to `depends` and a Blockbench model replacing `NoxThalModel`. What exists today is a
-vanilla `EntityModel` (no extra dependency) that is verified offline with
-`tools/preview_model.py` → `docs/img/nox_thal_model.png`.
+The trade was made deliberately — the user asked for it after the hand-built `EntityModel` kept
+looking wrong in game. `fabric.mod.json` now lists `"geckolib": ">=4.8.0"` under `depends`, so a
+profile without GeckoLib fails at load time with a clear missing-dependency message instead of a
+crash somewhere in the renderer.
+
+What that bought:
+
+| Before (`alpha.7`) | Now (`alpha.8`) |
+|---|---|
+| `NoxThalModel` — 50 cuboids created in Java, per-part pivots in *part space* | `assets/aetherius/geo/entity/nox_thal.geo.json` — 10 bones, 50 cubes, absolute model-space pivots, editable in Blockbench |
+| Movement faked by rotating parts in a `setAngles` branch | `assets/aetherius/animations/entity/nox_thal.animation.json` — `flight`, `heavy_flight`, `grounded`, `supernova`, `attack`, driven by an `AnimationController` |
+| Phase 3 roll needed a manual `PoseStack.rotate` | still a `PoseStack` roll in `NoxThalRenderer#preRender`, on top of GeckoLib's pose |
+
+`tools/preview_model.py` was rewritten for the data model: it rasterises the `.geo.json` (and any
+animation, at any time) into `docs/img/nox_thal_model.png` /
+`docs/img/nox_thal_flight.png`, so pivot mistakes are caught before a release.
+
+**Toolchain consequence:** GeckoLib 4.8.4 is built with Fabric Loom 1.10.5, and Loom refuses to
+remap a mod built with a *newer* Loom than itself. The project therefore moved from Loom 1.5.8 /
+Gradle 8.6 to **Loom 1.10.5 / Gradle 8.14**. Keep these two numbers in step if GeckoLib is ever
+updated.
 
 ## What Aetherius explicitly does *not* need
 

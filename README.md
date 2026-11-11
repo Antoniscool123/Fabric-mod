@@ -24,14 +24,22 @@ Assets:   48 generated textures · 65 block/item models · 45 data files
 
 ## Download & play
 
-1. Download **[aetherius-1.0.0-alpha.6.jar](https://github.com/Antoniscool123/Fabric-mod/releases/download/v1.0.0-alpha.6/aetherius-1.0.0-alpha.6.jar)**
-   (plus [`SHA256SUMS.txt`](https://github.com/Antoniscool123/Fabric-mod/releases/download/v1.0.0-alpha.6/SHA256SUMS.txt)).
+1. Download **[aetherius-1.0.0-alpha.8.jar](https://github.com/Antoniscool123/Fabric-mod/releases/download/v1.0.0-alpha.8/aetherius-1.0.0-alpha.8.jar)**
+   (plus [`SHA256SUMS.txt`](https://github.com/Antoniscool123/Fabric-mod/releases/download/v1.0.0-alpha.8/SHA256SUMS.txt)).
 2. Install **Fabric Loader 0.15.11+** for Minecraft **1.20.1**.
-3. Drop the jar **and** [Fabric API 0.92.2+1.20.1](https://modrinth.com/mod/fabric-api) into `.minecraft/mods`.
+3. Drop the jar, [Fabric API 0.92.2+1.20.1](https://modrinth.com/mod/fabric-api) **and**
+   [GeckoLib 4.8.4+1.20.1](https://modrinth.com/mod/geckolib/versions?g=1.20.1&loader=fabric)
+   into `.minecraft/mods`.
 4. Launch, create a world, and press **K** to open the Chronicle.
 
+   > **GeckoLib is required now.** From `alpha.8` the Nox'Thal model and its animations are
+   > GeckoLib assets (`assets/aetherius/geo/entity/nox_thal.geo.json` +
+   > `animations/entity/nox_thal.animation.json`), so the game refuses to load without it.
+   > The exact file that was used for testing is
+   > `geckolib-fabric-1.20.1-4.8.4.jar`; any 4.8.x for 1.20.1 works (`depends` says `>=4.8.0`).
+
 The jar is produced by GitHub Actions (`.github/workflows/build.yml`) on every tag:
-JDK 17 → Gradle 8.6 → Loom 1.5.8 → `compileJava` + `build` → attached to the release.
+JDK 17 → Gradle 8.14 → Loom 1.10.5 → `compileJava` + `build` → attached to the release.
 
 > **Alpha caveat:** the mod launches and loads a world on Fabric 1.20.1 (log in
 > `docs/VERIFICATION.md` §0b/§0c), but the story has not been played end-to-end yet.
@@ -57,7 +65,7 @@ JDK 17 → Gradle 8.6 → Loom 1.5.8 → `compileJava` + `build` → attached to
 
 ### Optional companion mods
 
-Aetherius is self-sufficient: it needs **Fabric API only**. These are optional quality-of-life
+Aetherius needs **Fabric API and GeckoLib only**. These are optional quality-of-life
 additions — nothing breaks if you skip them, and none of them are required for any feature.
 
 | Mod | Why you might want it |
@@ -97,7 +105,7 @@ Details and version pins: [`docs/OPTIONAL_MODS.md`](docs/OPTIONAL_MODS.md).
 | Registries, mixins, networking, commands | implemented |
 | Datapack content (dimension, biomes, loot, recipes, tags) | implemented |
 | Assets (textures, models, lang) | generated / placeholder-quality; audio is vanilla |
-| Compilation & packaging | **verified in CI** — JDK 17 / Gradle 8.6 / Loom 1.5.8, `compileJava` + `build` green, jar released |
+| Compilation & packaging | **verified in CI** — JDK 17 / Gradle 8.14 / Loom 1.10.5, `compileJava` + `build` green, jar released |
 | Runtime (launch) | **verified** — client boots, all 4 mixins apply, `[Aetherius] Initialised in 205 ms` |
 | Runtime (world load) | first attempt crashed on a biome JSON bug (fixed in `alpha.4`, see `docs/VERIFICATION.md` §0b) |
 | Gameplay balance | **not yet verified** |
@@ -110,23 +118,23 @@ not cover.
 
 ## Install & build
 
-Requirements: **JDK 17**, Gradle 8.6+ (Loom 1.5 rejects older Gradle), and the Fabric
+Requirements: **JDK 17**, Gradle 8.14+ (Loom 1.10 rejects older Gradle), and the Fabric
 toolchain that Loom downloads.
 
 ```bash
 # one-time: the wrapper JAR is a binary and is not committed
-gradle wrapper --gradle-version 8.6
+gradle wrapper --gradle-version 8.14
 
 ./gradlew build          # jar lands in build/libs/aetherius-1.0.0-alpha.jar
 ./gradlew runClient      # dev client
 ./gradlew runServer      # dev server
 ```
 
-Then drop the jar in `.minecraft/mods` alongside **Fabric Loader 0.15.11+** and
-**Fabric API 0.92.2+1.20.1**.
+Then drop the jar in `.minecraft/mods` alongside **Fabric Loader 0.15.11+**,
+**Fabric API 0.92.2+1.20.1** and **GeckoLib 4.8.4+1.20.1**.
 
 Gradle properties (`gradle.properties`) pin MC 1.20.1, Yarn `1.20.1+build.10`,
-Loader `0.15.11`, Fabric API `0.92.2+1.20.1`, Java 17, group `com.aetherius`.
+Loader `0.15.11`, Fabric API `0.92.2+1.20.1`, GeckoLib `4.8.4`, Java 17, group `com.aetherius`.
 
 ## The story in one paragraph
 
@@ -315,7 +323,7 @@ The asset pipeline is pure Python (no Pillow, no external downloads):
 | `tools/check_chronicle.py` | quest flags, objective classes, rune constants resolve |
 | `tools/check_lang.py` | translation keys used in Java exist in `en_us.json` |
 | `tools/check_data.py` | biome/dimension/model/recipe JSON shapes — encodes the bugs found at first launch |
-| `tools/preview_model.py` | rasterises the Nox'Thal cuboids to `docs/img/nox_thal_model.png` — catches broken pivots without launching the game |
+| `tools/preview_model.py` | rasterises the GeckoLib `nox_thal.geo.json` (and any of its animations) to `docs/img/nox_thal_model.png` — catches broken pivots without launching the game |
 
 Run them all:
 

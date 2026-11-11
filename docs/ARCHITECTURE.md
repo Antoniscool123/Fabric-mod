@@ -238,8 +238,9 @@ no client mixins (the client overlay uses the HUD callback instead).
   notch marks at 67%/34%, and applies the Supernova blackout tint while the darkness timer
   runs.
 - **Entities** — `AetherMobRenderer` (generic scaled humanoid), `AetherMantaModel` +
-  `AetherMantaRenderer` (wings, rider offset), `NoxThalModel` + `NoxThalRenderer` (dragon
-  body with per-phase glow), `GravityAnchorRenderer` (crystal block + rotating ring).
+  `AetherMantaRenderer` (wings, rider offset), `NoxThalGeoModel` + `NoxThalRenderer`
+  (GeckoLib `GeoEntityRenderer`, per-phase glow baked into the texture), `GravityAnchorRenderer`
+  (crystal block + rotating ring).
 - **Chronicle** — plain `Screen` with a tab strip (4 chapters), a quest list column, a detail
   pane (objectives with progress bars, rewards, lore), and a footer showing act completion.
   It is read-mostly by design; mutations go through `ChronicleActionC2SPacket`.
