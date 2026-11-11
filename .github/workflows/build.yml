@@ -58,6 +58,22 @@ jobs:
           echo "GRADLE_EXIT=$status" >> "$GITHUB_ENV"
           exit 0
 
+      - name: Dump compile classpath view of ChunkGenerator
+        if: always()
+        run: |
+          {
+            echo "== classpath"
+            CP=$(gradle -q printCompileClasspath --no-daemon --console=plain 2>/dev/null | sed -n '/CPSTART/,/CPEND/p' | sed '1d;$d')
+            echo "$CP" | tr ':' '\n' | grep -iE "minecraft|mapped|geckolib|intermediary" | head -20
+            echo "== ChunkGenerator on real compile classpath"
+            javap -classpath "$CP" net.minecraft.world.gen.chunk.ChunkGenerator 2>&1 | grep -i "column" | head -5
+            echo "== every ChunkGenerator class on classpath"
+            echo "$CP" | tr ':' '\n' | while read -r j; do
+              if [ -f "$j" ] && unzip -l "$j" 2>/dev/null | grep -q "net/minecraft/world/gen/chunk/ChunkGenerator.class"; then echo "HAS $j"; fi
+            done
+          } > cpview.txt 2>&1
+          cat cpview.txt
+
       - name: Dump API symbol locations
         if: always()
         run: |
@@ -102,7 +118,7 @@ jobs:
               }
             }
             let sym = '';
-            for (const f of ['jar-check.txt', 'probe.txt', 'symbols.txt']) {
+            for (const f of ['jar-check.txt', 'probe.txt', 'symbols.txt', 'cpview.txt']) {
               try { sym += '--- ' + f + ' ---\n' + fs.readFileSync(f, 'utf8'); }
               catch (e) { sym += f + ': missing\n'; }
             }

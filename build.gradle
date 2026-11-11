@@ -258,3 +258,12 @@ tasks.register('probeApi') {
         }
     }
 }
+
+// Diagnostic helper used by CI to inspect the exact compile classpath.
+tasks.register('printCompileClasspath') {
+    doLast {
+        println("CPSTART")
+        println(configurations.compileClasspath.asPath)
+        println("CPEND")
+    }
+}
