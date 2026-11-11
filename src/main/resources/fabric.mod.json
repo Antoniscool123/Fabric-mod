@@ -20,6 +20,9 @@
     ],
     "client": [
       "com.aetherius.AetheriusClient"
+    ],
+    "terrablender": [
+      "com.aetherius.compat.AetheriusTerraBlender"
     ]
   },
   "mixins": [
@@ -39,6 +42,7 @@
     "indium": "Keeps translucent Aetherius entities correct on Sodium",
     "iris": "Shaders make the Shattered Sky read properly",
     "jade": "Block/entity tooltips while testing content",
-    "xaeros-minimap": "The dimension is large; a map helps"
+    "xaeros-minimap": "The dimension is large; a map helps",
+    "terrablender": "Adds Starlit Meadows and Blighted Barrens to the overworld; without it those biomes only exist in the Shattered Sky"
   }
 }

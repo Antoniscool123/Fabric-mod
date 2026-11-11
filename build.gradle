@@ -46,9 +46,10 @@ dependencies {
         transitive = false
     }
 
-    // Optional worldgen integration - uncomment together with the TerraBlender
-    // region registration stub in StarlitMeadowInjector.
-    // modImplementation "com.github.glitchfiend:TerraBlender-fabric:${project.terrablender_version}"
+    // Optional worldgen integration (compat/AetheriusTerraBlender).
+    // Compile-only, NOT modImplementation: the classes are loaded through the "terrablender"
+    // entrypoint, so the mod builds and runs with or without TerraBlender installed.
+    modCompileOnly "com.github.glitchfiend:TerraBlender-fabric:${project.terrablender_version}"
 }
 
 processResources {
