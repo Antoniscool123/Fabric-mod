@@ -119,7 +119,7 @@ public final class ChronicleManager {
         magic.markDirty();
         chronicle.markDirty();
         AetherNetworking.syncMagic(player, magic);
-        Aetherius.audit("quest", quest.id().getPath(), player);
+        Audit.audit("quest", quest.id().getPath(), player);
     }
 
     /** Acts only advance; the highest fully-completed chapter sets the player's Act. */
@@ -241,7 +241,8 @@ public final class ChronicleManager {
     }
 
     /** Tiny logging facade so this class does not import the mod entry point directly. */
-    private static final class Aetherius {
+    /** Small audit facade so quest mutations leave a server log trail. */
+    private static final class Audit {
         static void audit(String type, String value, ServerPlayerEntity player) {
             com.aetherius.Aetherius.LOGGER.info("[Chronicle] {} {} -> {}", type, value,
                     player.getGameProfile().getName());
