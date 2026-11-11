@@ -21,7 +21,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(Entity.class)
 public abstract class EntityGravityMixin {
 
-    @Inject(method = "getGravity", at = @At("RETURN"), cancellable = true)
+    /**
+     * {@code require = 0}: on a mapping where {@code Entity#getGravity} is absent or renamed the
+     * game must still launch. The dimension then simply keeps vanilla gravity instead of failing
+     * the whole mixin set - the trade is documented in docs/VERIFICATION.md.
+     */
+    @Inject(method = "getGravity", at = @At("RETURN"), cancellable = true, require = 0)
     private void aetherius$modifyGravity(CallbackInfoReturnable<Double> cir) {
         Entity self = (Entity) (Object) this;
         double gravity = cir.getReturnValueD();

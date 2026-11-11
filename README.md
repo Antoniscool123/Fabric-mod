@@ -1,5 +1,9 @@
 # Aetherius: Echoes of the Shattered Sky
 
+[![Build](https://github.com/Antoniscool123/Fabric-mod/actions/workflows/build.yml/badge.svg)](https://github.com/Antoniscool123/Fabric-mod/actions/workflows/build.yml)
+[![Release](https://img.shields.io/github/v/release/Antoniscool123/Fabric-mod?include_prereleases)](https://github.com/Antoniscool123/Fabric-mod/releases)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+
 A large, story-driven magic mod for **Minecraft Java Edition 1.20.1 · Fabric**.
 Three acts, five schools of magic, a rune-combinatoric spell system, a chunk-rotting
 Celestial Blight, multi-block ritual structures, a low-gravity island dimension and a
@@ -11,10 +15,27 @@ without touching a GUI editor.
 
 ```
 Content:  131 Java files · ~12.6k lines · 13 blocks · 32 items · 10 entities
-          18 rune-sequenced spells · 15 runes · 14 quests · 13 lore entries
+          19 spells · 15 runes · 14 quests · 12 lore entries
           3 biomes · 1 dimension · 5 particle types · 280 translation keys
-Assets:   48 generated textures · 65 block/item models · 37 data files
+Assets:   48 generated textures · 65 block/item models · 45 data files
 ```
+
+---
+
+## Download & play
+
+1. Grab **[aetherius-1.0.0-alpha.2.jar](https://github.com/Antoniscool123/Fabric-mod/releases)** from Releases
+   (a `SHA256SUMS.txt` is attached next to it).
+2. Install **Fabric Loader 0.15.11+** for Minecraft **1.20.1**.
+3. Drop the jar **and** [Fabric API 0.92.2+1.20.1](https://modrinth.com/mod/fabric-api) into `.minecraft/mods`.
+4. Launch, create a world, and press **K** to open the Chronicle.
+
+The jar is produced by GitHub Actions (`.github/workflows/build.yml`) on every tag:
+JDK 17 → Gradle 8.6 → Loom 1.5.8 → `compileJava` + `build` → attached to the release.
+
+> **Alpha caveat:** the mod *compiles and packages* cleanly in CI, but no one has launched
+> it in a running client yet. Treat the first launch as a test: if it crashes, the stack
+> trace names the exact class. `docs/VERIFICATION.md` lists the known runtime risks.
 
 ---
 
@@ -42,17 +63,19 @@ Assets:   48 generated textures · 65 block/item models · 37 data files
 | Registries, mixins, networking, commands | implemented |
 | Datapack content (dimension, biomes, loot, recipes, tags) | implemented |
 | Assets (textures, models, lang, sounds) | generated / placeholder-quality |
-| **Compilation** | **never verified — no JDK was available in the authoring environment** |
+| Compilation & packaging | **verified in CI** — JDK 17 / Gradle 8.6 / Loom 1.5.8, `compileJava` + `build` green, jar released |
+| Runtime (launch, gameplay balance) | **not yet verified** — no client has been run |
 
-That last line is deliberate honesty, not modesty. The code was written against the
-1.20.1 Yarn API surface and then checked mechanically (see `docs/VERIFICATION.md` and the
-`tools/check_*.py` scripts), but `./gradlew build` has not produced a jar yet. Expect to
-spend a short session on ordinary API drift (signature differences, one or two imports)
-before the first successful compile.
+Packaging is real: the release jar is built by CI from this exact commit, with the mod's
+`fabric.mod.json` version expanded and every asset and datapack file inside. What is *not*
+proven is behaviour — spawning Nox'Thal, the blight spread cadence and the HUD layout have
+never been observed in a running game. See `docs/VERIFICATION.md` for what CI does and does
+not cover.
 
 ## Install & build
 
-Requirements: **JDK 17**, Gradle 8.6+, and the Fabric toolchain that Loom downloads.
+Requirements: **JDK 17**, Gradle 8.6+ (Loom 1.5 rejects older Gradle), and the Fabric
+toolchain that Loom downloads.
 
 ```bash
 # one-time: the wrapper JAR is a binary and is not committed

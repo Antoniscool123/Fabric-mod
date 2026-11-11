@@ -1,8 +1,24 @@
 # Verification Status
 
-This project was authored **without a JDK, Gradle or a Minecraft runtime**. Nothing here has
-been compiled or launched. This file records exactly what *was* checked, how, and what is
-still unknown, so the first person with a toolchain knows where to start.
+The project is now **built and packaged by CI** — `compileJava` and `build` both pass, and a
+jar is attached to the `v1.0.0-alpha.2` release. It has **never been launched**, so runtime
+behaviour is still unknown. This file records exactly what is checked, how, and what remains
+unverified.
+
+## 0. CI build (authoritative)
+
+| Item | Value |
+|---|---|
+| Workflow | `.github/workflows/build.yml` |
+| JDK | Temurin 17 |
+| Gradle | 8.6 (Loom 1.5 requires ≥ 8.3) |
+| Loom / Yarn | 1.5.8 / 1.20.1+build.10 |
+| Tasks | `compileJava` → `build` (remapJar, sourcesJar) |
+| Result | green; `aetherius-1.0.0-alpha.2.jar` + `-sources.jar` + `SHA256SUMS.txt` on the release |
+| Errors left | 0 (`-Xmaxerrs 500`, so nothing is hidden behind the 100-error default) |
+
+The compile run also regenerates every asset and datapack file and re-runs the static
+checkers below, so a release cannot be published from a state that fails them.
 
 ---
 
@@ -38,9 +54,8 @@ Hand-verified consistencies:
 
 | Risk | Notes |
 |---|---|
-| **Compilation** | zero compiles. Signature drift is the expected first failure class. |
-| Runtime behaviour | no server ever started; tick order, packet handling and rendering are unproven. |
-| Mixin targets | AP contracts (`@Inject` at named methods, `CallbackInfo` shapes) are unverified. |
+| Runtime behaviour | no server or client ever started; tick order, packet handling and rendering are unproven. |
+| Mixin targets | they compile, but the `@Inject` targets are only proven at launch. `EntityGravityMixin` is marked `require = 0` so a missing `Entity#getGravity` degrades instead of crashing. |
 | Client rendering | `HudRenderCallback`, `Screen` layout, model UVs and renderer transforms are untested. |
 | Datapack schema | biomes/dimension JSONs follow 1.20.1 shapes but were not loaded by the game. |
 | Balance | tuning numbers are design values, not playtested values. |
@@ -94,6 +109,14 @@ immune to arrows, summon four anchors at 67%, and black out the screen at 34%.
 - The Gradle wrapper **JAR** is intentionally absent (binary, unavailable offline). The
   `gradle/wrapper/gradle-wrapper.properties` pinning Gradle 8.1.1 *is* committed so the
   first `gradle wrapper` call reproduces the expected version.
+
+## 4b. Known runtime risks (ranked)
+
+1. **Mixin application** — `PlayerEntityMixin` (`writeCustomDataToNbt`/`readCustomDataFromNbt`/`checkFallFlying`), `ServerPlayerEntityMixin` (`copyFrom`), `LivingEntityMixin` (`jump`/`handleFallDamage`). If a name drifted, launch fails loudly; the log names the mixin.
+2. **Registry bootstrap order** — `Aetherius.onInitialize` must keep blocks → entities → items.
+3. **Datapack schema** — one malformed field in `dimension_type/shattered_sky.json` blocks the world from loading (not the client from starting).
+4. **Particle factories** — an unregistered type logs a warning per particle, it does not crash.
+5. **Chunk generator callbacks** — `getColumnSample`/`getHeight` feed vanilla heightmaps; wrong values produce floating/sunken terrain rather than a crash.
 
 ## 5. Definition of "working"
 
