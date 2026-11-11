@@ -17,10 +17,16 @@ base {
 repositories {
     maven { url = 'https://maven.fabricmc.net/' }
     mavenCentral()
-    // GeckoLib: animated entity models (Nox'Thal).
-    maven {
-        name = 'GeckoLib'
-        url = 'https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/'
+    // GeckoLib: animated entity models (Nox'Thal). Restricted to GeckoLib's own group so this
+    // repository can never serve a Minecraft, mapping or Fabric API artifact by accident.
+    exclusiveContent {
+        forRepository {
+            maven {
+                name = 'GeckoLib'
+                url = 'https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/'
+            }
+        }
+        filter { includeGroup 'software.bernie.geckolib' }
     }
     // TerraBlender is only needed for the optional Starlit Meadows biome injection.
     maven { url = 'https://maven.minecraftforge.net/' }
@@ -34,7 +40,11 @@ dependencies {
 
     // Animation engine for Nox'Thal. A hard dependency: the boss entity implements
     // GeoAnimatable, so the mod cannot load without it (declared in fabric.mod.json).
-    modImplementation "software.bernie.geckolib:geckolib-fabric-1.20.1:${project.geckolib_version}"
+    // transitive = false: GeckoLib's POM also lists fabric-api 0.92.6 + loader as runtime deps;
+    // we pin our own versions and GeckoLib ships mclib as a jar-in-jar.
+    modImplementation("software.bernie.geckolib:geckolib-fabric-1.20.1:${project.geckolib_version}") {
+        transitive = false
+    }
 
     // Optional worldgen integration - uncomment together with the TerraBlender
     // region registration stub in StarlitMeadowInjector.

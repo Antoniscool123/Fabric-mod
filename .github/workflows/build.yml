@@ -68,6 +68,13 @@ jobs:
               echo "== $n" >> symbols.txt
               unzip -l "$JAR" | grep -E "(^|/)$n(\\$[A-Za-z]+)?\\.class" | awk '{print $4}' | head -6 >> symbols.txt
             done
+            echo "== ChunkGenerator#getColumnSample" >> symbols.txt
+            javap -classpath "$JAR" net.minecraft.world.gen.chunk.ChunkGenerator 2>&1 | grep -i "column\|class " | head -8 >> symbols.txt
+            echo "== VerticalBlockSample" >> symbols.txt
+            javap -classpath "$JAR" net.minecraft.world.gen.chunk.VerticalBlockSample 2>&1 | head -6 >> symbols.txt
+            echo "== resolved fabric-api / geckolib" >> symbols.txt
+            find ~/.gradle/caches/modules-2/files-2.1 -maxdepth 2 -type d \( -name "fabric-api" -o -name "geckolib-fabric-1.20.1" \) 2>/dev/null | head -6 >> symbols.txt
+            find ~/.gradle/caches/modules-2/files-2.1 -path "*fabric-api*" -name "*.jar" 2>/dev/null | head -4 >> symbols.txt
             echo "== PersistentState members" >> symbols.txt
             javap -classpath "$JAR" net.minecraft.world.PersistentState 2>&1 | head -25 >> symbols.txt
             echo "== EntityModel check" >> symbols.txt
