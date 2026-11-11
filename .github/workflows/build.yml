@@ -137,7 +137,9 @@ jobs:
                    data/aetherius/dimension_type/shattered_sky.json \
                    data/aetherius/worldgen/placed_feature/star_vein_ore.json \
                    data/aetherius/loot_tables/blocks/star_vein_ore.json \
-                   assets/aetherius/textures/entity/nox_thal.png; do
+                   assets/aetherius/textures/entity/nox_thal.png \
+                   assets/aetherius/geo/entity/nox_thal.geo.json \
+                   assets/aetherius/animations/entity/nox_thal.animation.json; do
             if grep -q " $p$" jar-contents.txt; then
               echo "ok      $p"
             else
@@ -145,6 +147,8 @@ jobs:
               missing=1
             fi
           done
+          echo "--- fabric.mod.json version + dependencies:"
+          unzip -p "$JAR" fabric.mod.json | python3 -c "import json,sys; d=json.load(sys.stdin); print('version', d['version']); print('depends', sorted(d['depends']))"
           echo "--- fabric.mod.json version field:"
           unzip -p "$JAR" fabric.mod.json | grep '"version"'
           echo "--- entry count: $(wc -l < jar-contents.txt)"

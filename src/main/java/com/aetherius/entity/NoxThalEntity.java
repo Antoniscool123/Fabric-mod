@@ -42,6 +42,15 @@ import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import software.bernie.geckolib.animatable.GeoEntity;
+import software.bernie.geckolib.core.animatable.GeoAnimatable;
+import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
+import software.bernie.geckolib.core.animation.AnimatableManager;
+import software.bernie.geckolib.core.animation.AnimationController;
+import software.bernie.geckolib.core.animation.AnimationState;
+import software.bernie.geckolib.core.animation.RawAnimation;
+import software.bernie.geckolib.core.object.PlayState;
+import software.bernie.geckolib.util.GeckoLibUtil;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -68,9 +77,23 @@ import java.util.List;
  *  34%-0%   Supernova            screen black, AOE star-strikes, elytra locked
  * </pre>
  */
-public class NoxThalEntity extends PathAwareEntity {
+public class NoxThalEntity extends PathAwareEntity implements GeoEntity {
 
     public static final double ARENA_RADIUS = 48.0;
+
+    /** Animations authored in {@code animations/entity/nox_thal.animation.json}. */
+    private static final RawAnimation FLIGHT =
+            RawAnimation.begin().thenLoop("animation.nox_thal.flight");
+    private static final RawAnimation HEAVY_FLIGHT =
+            RawAnimation.begin().thenLoop("animation.nox_thal.heavy_flight");
+    private static final RawAnimation GROUNDED =
+            RawAnimation.begin().thenLoop("animation.nox_thal.grounded");
+    private static final RawAnimation SUPERNOVA =
+            RawAnimation.begin().thenLoop("animation.nox_thal.supernova");
+    private static final RawAnimation ATTACK =
+            RawAnimation.begin().thenPlay("animation.nox_thal.attack");
+
+    private final AnimatableInstanceCache animationCache = GeckoLibUtil.createInstanceCache(this);
     private static final int TRANSITION_INVULNERABILITY = 50;
 
     private final ServerBossBar bossBar;
@@ -96,6 +119,49 @@ public class NoxThalEntity extends PathAwareEntity {
         this.bossBar = new ServerBossBar(this.getDisplayName(), BossBar.Color.PURPLE, BossBar.Style.PROGRESS);
         this.bossBar.setDarkenSky(true);
         this.setPersistent();
+    }
+
+    // =====================================================================
+    //  GeckoLib animation
+    // =====================================================================
+
+    @Override
+    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
+        // 4-tick transitions keep phase changes from snapping.
+        controllers.add(new AnimationController<>(this, "main", 4, this::animationPredicate)
+                .triggerableAnim("attack", ATTACK));
+    }
+
+    private <E extends GeoAnimatable> PlayState animationPredicate(AnimationState<E> state) {
+        if (!(state.getAnimatable() instanceof NoxThalEntity entity)) {
+            return PlayState.STOP;
+        }
+        RawAnimation animation;
+        if (entity.isSupernovaActive()) {
+            animation = SUPERNOVA;
+        } else if (entity.isGrounded()) {
+            animation = GROUNDED;
+        } else if (entity.phaseIndex() == 1) {
+            animation = HEAVY_FLIGHT;
+        } else {
+            animation = FLIGHT;
+        }
+        return state.setAndContinue(animation);
+    }
+
+    @Override
+    public AnimatableInstanceCache getAnimatableInstanceCache() {
+        return this.animationCache;
+    }
+
+    @Override
+    public double getTick(Object object) {
+        return this.age;
+    }
+
+    /** Called when the dragon bites or breathes, so the animation matches the hit. */
+    public void playAttackAnimation() {
+        this.triggerAnim("main", "attack");
     }
 
     @Override
@@ -276,6 +342,8 @@ public class NoxThalEntity extends PathAwareEntity {
             return BTStatus.FAILURE;
         }
         breathCooldown = 60;
+        // Fire the head-snap animation for nearby clients (no-op on the server).
+        this.triggerAnim("main", "attack");
         if (!(this.getWorld() instanceof ServerWorld serverWorld)) {
             return BTStatus.FAILURE;
         }

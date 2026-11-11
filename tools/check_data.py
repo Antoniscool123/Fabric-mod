@@ -200,6 +200,89 @@ def check_model(rel, doc):
             problems.append(f"{rel}: invalid texture reference {key}={value!r}")
 
 
+def check_geo(rel, doc):
+    """GeckoLib geometry: unique bone names, resolvable parents, sane cubes."""
+    geometries = doc.get("minecraft:geometry")
+    if not isinstance(geometries, list) or not geometries:
+        problems.append(f"{rel}: needs a non-empty 'minecraft:geometry' list")
+        return
+    for geometry in geometries:
+        description = geometry.get("description") or {}
+        identifier = description.get("identifier", "")
+        if not isinstance(identifier, str) or not identifier.startswith("geometry."):
+            problems.append(f"{rel}: description.identifier must start with 'geometry.'")
+        for key in ("texture_width", "texture_height"):
+            if not isinstance(description.get(key), int):
+                problems.append(f"{rel}: description.{key} must be an int")
+        bones = geometry.get("bones")
+        if not isinstance(bones, list) or not bones:
+            problems.append(f"{rel}: geometry has no bones")
+            return
+        names = {}
+        for bone in bones:
+            name = bone.get("name")
+            if not isinstance(name, str):
+                problems.append(f"{rel}: a bone has no name")
+                continue
+            if name in names:
+                problems.append(f"{rel}: duplicate bone '{name}'")
+            names[name] = bone
+        for name, bone in names.items():
+            parent = bone.get("parent")
+            if parent is not None and parent not in names:
+                problems.append(f"{rel}: bone '{name}' has unknown parent '{parent}'")
+            pivot = bone.get("pivot")
+            if not isinstance(pivot, list) or len(pivot) != 3:
+                problems.append(f"{rel}: bone '{name}' needs a 3-number pivot")
+            for cube in bone.get("cubes") or []:
+                origin, size, uv = cube.get("origin"), cube.get("size"), cube.get("uv")
+                if not isinstance(origin, list) or len(origin) != 3:
+                    problems.append(f"{rel}: bone '{name}' has a cube without a 3-number origin")
+                if not isinstance(size, list) or len(size) != 3:
+                    problems.append(f"{rel}: bone '{name}' has a cube without a 3-number size")
+                if not isinstance(uv, list) or len(uv) < 2:
+                    problems.append(f"{rel}: bone '{name}' has a cube without a uv origin")
+
+
+def check_animation(rel, doc, geo_bones):
+    """Every animated bone must exist in the matching model — otherwise the animation silently
+    does nothing (or crashes, if crashIfBoneMissing is left at its default)."""
+    animations = doc.get("animations")
+    if not isinstance(animations, dict) or not animations:
+        problems.append(f"{rel}: needs an 'animations' object")
+        return
+    for name, animation in animations.items():
+        if not isinstance(animation, dict):
+            problems.append(f"{rel}: {name} is not an object")
+            continue
+        if isinstance(animation.get("animation_length"), bool) or \
+                not isinstance(animation.get("animation_length"), (int, float)):
+            problems.append(f"{rel}: {name} needs a numeric animation_length")
+        bones = animation.get("bones")
+        if not isinstance(bones, dict):
+            problems.append(f"{rel}: {name} has no bones block")
+            continue
+        for bone, channels in bones.items():
+            if geo_bones and bone not in geo_bones:
+                problems.append(f"{rel}: {name} animates '{bone}', which is not a bone in the model")
+            for channel, keyframes in channels.items():
+                if channel not in ("rotation", "position", "scale"):
+                    problems.append(f"{rel}: {name}.{bone} has unknown channel '{channel}'")
+                    continue
+                if not isinstance(keyframes, dict):
+                    problems.append(f"{rel}: {name}.{bone}.{channel} must be keyframe objects")
+                    continue
+                for time, value in keyframes.items():
+                    try:
+                        float(time)
+                    except ValueError:
+                        problems.append(f"{rel}: {name}.{bone}.{channel} key '{time}' is not a time")
+                    if channel == "scale":
+                        continue
+                    if not isinstance(value, list) or len(value) != 3:
+                        problems.append(f"{rel}: {name}.{bone}.{channel}['{time}'] must be [x, y, z]")
+
+
 def check_recipe(rel, doc):
     kind = doc.get("type", "")
     if kind == "minecraft:crafting_shaped":
@@ -234,6 +317,16 @@ def check_blockstate(rel, doc):
 
 def main():
     global checked
+    geo_bones = set()
+    for path in glob.glob(os.path.join(RES, "assets", "**", "geo", "**", "*.geo.json"),
+                          recursive=True):
+        doc = load(path)
+        if not doc:
+            continue
+        for geometry in doc.get("minecraft:geometry") or []:
+            for bone in geometry.get("bones") or []:
+                if isinstance(bone.get("name"), str):
+                    geo_bones.add(bone["name"])
     placed_ids = set()
     configured_ids = set()
     for path in glob.glob(os.path.join(DATA, "worldgen", "placed_feature", "*.json")):
@@ -268,6 +361,11 @@ def main():
                 problems.append(f"{rel}: unknown configured feature {feature}")
         if "/recipes/" in rel.replace(os.sep, "/"):
             check_recipe(rel.replace(os.sep, "/"), doc)
+        normalised = rel.replace(os.sep, "/")
+        if normalised.endswith(".geo.json"):
+            check_geo(normalised, doc)
+        if normalised.endswith(".animation.json"):
+            check_animation(normalised, doc, geo_bones)
 
     # biome feature references must resolve to a placed feature that exists
     for path in glob.glob(os.path.join(DATA, "worldgen", "biome", "*.json")):

@@ -10,7 +10,6 @@ import com.aetherius.client.render.AetherMantaModel;
 import com.aetherius.client.render.AetherMantaRenderer;
 import com.aetherius.client.render.AetherMobRenderer;
 import com.aetherius.client.render.GravityAnchorRenderer;
-import com.aetherius.client.render.NoxThalModel;
 import com.aetherius.client.render.NoxThalRenderer;
 import com.aetherius.client.screen.ChronicleScreen;
 import com.aetherius.network.InscribeRuneC2SPacket;
@@ -60,7 +59,6 @@ public final class AetheriusClient implements ClientModInitializer {
         HudRenderCallback.EVENT.register(new MagicHudOverlay());
         HudRenderCallback.EVENT.register(new NoxThalBossBarOverlay());
 
-        EntityModelLayerRegistry.registerModelLayer(NoxThalModel.LAYER, NoxThalModel::getTexturedModelData);
         EntityModelLayerRegistry.registerModelLayer(AetherMantaModel.LAYER, AetherMantaModel::getTexturedModelData);
 
         EntityRendererRegistry.register(ModEntities.NOX_THAL, NoxThalRenderer::new);

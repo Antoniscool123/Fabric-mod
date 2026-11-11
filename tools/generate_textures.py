@@ -313,7 +313,8 @@ def skin_texture(primary, secondary, accent, seed, size=64):
 
 
 def dragon_texture(size_w=256, size_h=256):
-    """Atlas for NoxThalModel: three big material patches, matching the UV_* constants there.
+    """Atlas for the GeckoLib Nox'Thal model: three big material patches, matching the uv
+    regions used by assets/aetherius/geo/entity/nox_thal.geo.json.
 
     scales (0,0 96x96) · membrane (0,96 96x96) · bone (100,0 32x32). Every cuboid samples one of
     those, and each patch is a little larger than the largest box footprint that uses it
