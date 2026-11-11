@@ -15,6 +15,8 @@ import com.aetherius.registry.ModItems;
 import com.aetherius.registry.ModParticles;
 import com.aetherius.registry.ModSounds;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
+import net.minecraft.entity.EntityDimensions;
+import net.minecraft.entity.EntityPose;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.DefaultAttributeContainer;
@@ -94,6 +96,13 @@ public class NoxThalEntity extends PathAwareEntity {
         this.bossBar = new ServerBossBar(this.getDisplayName(), BossBar.Color.PURPLE, BossBar.Style.PROGRESS);
         this.bossBar.setDarkenSky(true);
         this.setPersistent();
+    }
+
+    @Override
+    public EntityDimensions getDimensions(EntityPose pose) {
+        // The dragon is a 1.6x-scaled model: give it a matching hitbox so nameplate, shadow and
+        // hit tests line up with what the player sees.
+        return EntityDimensions.changing(3.0f, 3.2f);
     }
 
     public static DefaultAttributeContainer.Builder createNoxThalAttributes() {

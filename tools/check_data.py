@@ -5,8 +5,8 @@ Encodes the three real 1.20.1 bugs found at first launch:
   1. biome "carvers" must be an object ("Not a JSON object: []").
   2. resource locations must contain exactly one colon
      ("aetherius:block/minecraft:block/dirt is not valid resource location").
-  3. sounds.json "name" is a path under assets/<ns>/sounds/ without dots and
-     without a "sounds/" prefix ("minecraft:sounds/item.firecharge.use.ogg does not exist").
+  3. (retired) we no longer ship sounds.json: every sound is a vanilla SoundEvents alias,
+     so no guessed .ogg path can go missing at runtime.
 Plus structural checks for dimension types, dimensions, biomes and worldgen entries.
 """
 import glob
@@ -51,6 +51,105 @@ def check_resource_locations(rel, doc):
             continue  # prose, descriptions and single-namespace ids are fine
         if re.fullmatch(r"[a-z0-9_.-]+:[a-z0-9_/.-]+:[a-z0-9_/.-]+", value):
             problems.append(f"{rel}: {where} = {value!r} is not a valid resource location")
+
+
+def check_biome(rel, doc):
+    carvers = doc.get("carvers")
+    if not isinstance(carvers, dict):
+        problems.append(f"{rel}: carvers must be an object, got {type(carvers).__name__} "
+                        "(1.20.1: {\"air\": []})")
+    features = doc.get("features")
+    if not isinstance(features, list) or len(features) != 11:
+        problems.append(f"{rel}: features must be 11 generation-step lists, got "
+                        f"{len(features) if isinstance(features, list) else type(features).__name__}")
+    if isinstance(features, list):
+        for index, step in enumerate(features):
+            if not isinstance(step, list):
+                problems.append(f"{rel}: features[{index}] is not a list")
+    spawners = doc.get("spawners")
+    if not isinstance(spawners, dict):
+        problems.append(f"{rel}: spawners must be an object")
+    else:
+        for category, entries in spawners.items():
+            if not isinstance(entries, list):
+                problems.append(f"{rel}: spawners.{category} is not a list")
+            for entry in entries:
+                if not isinstance(entry, dict) or "type" not in entry:
+                    problems.append(f"{rel}: spawners.{category} entry lacks 'type'")
+    effects = doc.get("effects")
+    if not isinstance(effects, dict):
+        problems.append(f"{rel}: effects must be an object")
+    else:
+        for key in ("sky_color", "fog_color", "water_color"):
+            if not isinstance(effects.get(key), int):
+                problems.append(f"{rel}: effects.{key} must be an int")
+        mood = effects.get("mood_sound")
+        if mood is not None:
+            for key in ("sound", "tick_delay", "block_search_extent", "offset"):
+                if key not in mood:
+                    problems.append(f"{rel}: effects.mood_sound missing '{key}'")
+    if not isinstance(doc.get("temperature"), (int, float)):
+        problems.append(f"{rel}: temperature must be numeric")
+    if "has_precipitation" not in doc:
+        problems.append(f"{rel}: has_precipitation is required in 1.20.1")
+
+
+def check_dimension_type(rel, doc):
+    required = ["ultrawarm", "natural", "coordinate_scale", "has_skylight", "has_ceiling",
+                "ambient_light", "monster_spawn_light_level", "monster_spawn_block_light_limit",
+                "piglin_safe", "bed_works", "respawn_anchor_works", "has_raids",
+                "logical_height", "min_y", "height", "infiniburn", "effects"]
+    for key in required:
+        if key not in doc:
+            problems.append(f"{rel}: missing required field '{key}'")
+    if isinstance(doc.get("min_y"), int) and doc.get("min_y") % 16:
+        problems.append(f"{rel}: min_y must be a multiple of 16")
+    if isinstance(doc.get("height"), int) and doc.get("height") % 16:
+        problems.append(f"{rel}: height must be a multiple of 16")
+    logical = doc.get("logical_height")
+    height = doc.get("height")
+    if isinstance(logical, int) and isinstance(height, int) and logical > height:
+        problems.append(f"{rel}: logical_height must be <= height")
+    infiniburn = doc.get("infiniburn")
+    if isinstance(infiniburn, str) and not infiniburn.startswith("#"):
+        problems.append(f"{rel}: infiniburn must be a tag id ('#minecraft:...')")
+
+
+def check_dimension(rel, doc):
+    for key in ("type", "generator"):
+        if key not in doc:
+            problems.append(f"{rel}: missing '{key}'")
+    generator = doc.get("generator", {})
+    for key in ("type", "biome_source"):
+        if key not in generator:
+            problems.append(f"{rel}: generator missing '{key}'")
+
+
+def check_placed(rel, doc):
+    if "feature" not in doc or not isinstance(doc.get("placement"), list):
+        problems.append(f"{rel}: placed feature needs 'feature' and a 'placement' list")
+        return
+    for index, modifier in enumerate(doc["placement"]):
+        if not isinstance(modifier, dict) or "type" not in modifier:
+            problems.append(f"{rel}: placement[{index}] lacks 'type'")
+
+
+def check_configured(rel, doc):
+    if "type" not in doc or "config" not in doc:
+        problems.append(f"{rel}: configured feature needs 'type' and 'config'")
+
+
+def check_model(rel, doc):
+    parent = doc.get("parent")
+    if parent is not None and not re.fullmatch(r"[a-z0-9_.-]+:[a-z0-9_/.-]+", parent):
+        problems.append(f"{rel}: invalid parent {parent!r}")
+    for key, value in (doc.get("textures") or {}).items():
+        if not isinstance(value, str):
+            continue
+        if value.startswith("#"):
+            continue
+        if not re.fullmatch(r"[a-z0-9_.-]+:[a-z0-9_/.-]+", value):
+            problems.append(f"{rel}: invalid texture reference {key}={value!r}")
 
 
 def check_biome(rel, doc):
@@ -225,8 +324,6 @@ def main():
                 check_model(rel.replace(os.sep, "/"), doc)
             if "blockstates/" in rel.replace(os.sep, "/"):
                 check_blockstate(rel.replace(os.sep, "/"), doc)
-        if rel.endswith("sounds.json"):
-            check_sounds(rel.replace(os.sep, "/"), doc)
         if "/worldgen/biome/" in rel.replace(os.sep, "/"):
             check_biome(rel.replace(os.sep, "/"), doc)
         if "/dimension_type/" in rel.replace(os.sep, "/"):

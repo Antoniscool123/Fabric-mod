@@ -84,7 +84,13 @@ public final class ClientNetworkHandlers {
         ClientPlayNetworking.registerGlobalReceiver(AetherNetworking.OPEN_CHRONICLE,
                 (client, handler, buf, sender) -> client.execute(() -> {
                     ChronicleRegistry.bootstrap();
-                    client.setScreen(new ChronicleScreen());
+                    // Never replace a screen that is already open: doing so re-runs init() and
+                    // makes the book unclickable (and unclosable).
+                    if (client.currentScreen == null) {
+                        client.setScreen(new ChronicleScreen());
+                    } else if (client.currentScreen instanceof ChronicleScreen screen) {
+                        screen.refresh();
+                    }
                 }));
     }
 

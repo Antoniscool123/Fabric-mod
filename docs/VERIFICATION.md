@@ -1,9 +1,8 @@
 # Verification Status
 
-The project is now **built and packaged by CI** — `compileJava` and `build` both pass, and a
-jar is attached to the `v1.0.0-alpha.2` release. It has **never been launched**, so runtime
-behaviour is still unknown. This file records exactly what is checked, how, and what remains
-unverified.
+The project is **built and packaged by CI** — `compileJava` and `build` both pass — and it has
+been **launched by a real player** twice (alpha.3: world load crashed; alpha.4: world load clean).
+This file records exactly what is checked, how, and what remains unverified.
 
 ## 0. CI build (authoritative)
 
@@ -14,7 +13,7 @@ unverified.
 | Gradle | 8.6 (Loom 1.5 requires ≥ 8.3) |
 | Loom / Yarn | 1.5.8 / 1.20.1+build.10 |
 | Tasks | `compileJava` → `build` (remapJar, sourcesJar) |
-| Result | green; `aetherius-1.0.0-alpha.3.jar` + `-sources.jar` + `SHA256SUMS.txt` on the release |
+| Result | green; `aetherius-1.0.0-alpha.5.jar` + `-sources.jar` + `SHA256SUMS.txt` on the release |
 | Errors left | 0 (`-Xmaxerrs 500`, so nothing is hidden behind the 100-error default) |
 
 The compile run also regenerates every asset and datapack file and re-runs the static
@@ -52,6 +51,31 @@ resource-location syntax (exactly one colon), model parent/texture references, b
 variants, placed/configured feature structure, dimension and dimension-type required fields,
 and sounds.json path format. It runs before compile in CI, so a release can no longer ship any
 of the three bugs above.
+
+---
+
+## 0c. Second live run — `1.0.0-alpha.4`, same machine
+
+The user's log after alpha.4 shows the world loads with **no crash**:
+
+```
+[Aetherius] World seed 4470475199119711005 bound to the Shattered Sky generator
+[Aetherius] Initialised in 93 ms - 18 spells, 14 quests, 12 lore entries
+```
+
+That confirmed the worldgen/resource class of bugs was closed. Four *playability* bugs remained,
+all reported from the same session and all fixed in `1.0.0-alpha.5`:
+
+| Symptom | Root cause | Fix |
+|---|---|---|
+| Chronicle (K) opened but nothing reacted — no tab, no Close, not even ESC | `ChronicleScreen.init()` sent `ACTION_OPEN`; the server answered with `OPEN_CHRONICLE`; the client replaced the already-open screen with a fresh one. `init()` ran again, so every click/ESC was undone within a frame (infinite screen churn) | `ACTION_OPEN` is now a *sync request only* (`CHRONICLE_SYNC`); `OPEN_CHRONICLE` is ignored while any screen is open, and `ChronicleTomeItem` no longer double-requests |
+| Nox'Thal's head floated above the neck; body looked like loose boxes | head cuboids used body-space `y = -24..-26` offsets *and* a `pivot(0, -22, -6)` on a neck that already spanned `-24` → head displaced ~46 px; two of the four head boxes were anchored to a different origin than the skull | model rebuilt in absolute model space, pivots on the real joints, head+snout+horns in one part so rotation cannot split them; 256×256 atlas matching the actual cuboid faces; hitbox raised to 3.0×3.2 so the model is inside it |
+| `/aetherius dimension` "does not exist" | the subcommand was documented but never registered | `dimension` + `dimension return` added; the root literal now allows permission level 0, with op level re-applied per mutating subcommand; added `spells`/`quests` shortcuts |
+| 12 × `File minecraft:sounds/....ogg does not exist` + `Unable to play empty soundEvent: aetherius:boss_nox_roar` | `sounds.json` guessed vanilla file paths, and 14 mod-owned events had no audio at all | `sounds.json` deleted; `ModSounds` is now a table of real vanilla `SoundEvents` aliases, so the compiler guarantees the file exists and there are no empty events |
+
+The lesson recorded here: **do not hand-write asset paths the game owns.** Either point at a
+`SoundEvents` constant in Java, or ship the asset. `check_data.py` now no longer validates
+`sounds.json` because nothing ships one.
 
 ## 1. What is verified (mechanically)
 
@@ -120,13 +144,18 @@ gradle wrapper --gradle-version 8.6   # binary wrapper JAR is not committed
 Quick smoke tests once it boots:
 
 ```
-/aetherius spells            # prints the 19 registered spell keys
-/aetherius quests            # prints the 14 quest ids + dependencies
+/aetherius spells            # prints the 19 registered spell keys        (no op needed)
+/aetherius quests            # prints the 14 quest ids + dependencies     (no op needed)
+/aetherius dimension         # teleports to aetherius:shattered_sky       (no op needed)
+/aetherius dimension return  # back to the Overworld spawn
+/aetherius chronicle         # opens the Chronicle book
 /give @s aetherius:astral_wand
-/aetherius magic tension 100 # should trigger a backfire on the next tick
-/aetherius dimension         # teleports to aetherius:shattered_sky
+/aetherius tension 100       # op only: should trigger a backfire on the next tick
 /summon aetherius:nox_thal   # walks through the three phase bars
 ```
+
+Anything that mutates world or player state (`mana`, `tension`, `rune`, `quest`, `blight`,
+`boss`) requires permission level 2; the read/teleport commands above do not.
 
 Expected: backfire explodes the mana pool, blinds the player for ~11 s, spawns 2–4 Void
 Specters and injects +3 blight into the chunk. Nox'Thal should announce phase 1, become

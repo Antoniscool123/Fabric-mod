@@ -312,18 +312,29 @@ def skin_texture(primary, secondary, accent, seed, size=64):
     return img
 
 
-def dragon_texture(size_w=128, size_h=160):
+def dragon_texture(size_w=256, size_h=256):
+    """UV atlas for NoxThalModel. Regions match the cuboid uv() calls in that file."""
     img = blank(size_w, size_h)
     rnd = random.Random(99)
     scale_dark = (26, 16, 46, 255)
-    scale_light = (58, 36, 92, 255)
+    scale_light = (52, 32, 82, 255)
     for y in range(size_h):
         for x in range(size_w):
             if rnd.random() < 0.06:
                 continue
             img[y][x] = scale_light if (x + y) % 7 == 0 else scale_dark
-    draw_rect(img, 64, 0, 76, 30, (150, 60, 200, 255))     # eyes / glow band
-    draw_rect(img, 0, 100, 60, 112, (90, 50, 130, 255))    # wing membrane
+    draw_rect(img, 0, 0, 104, 50, (36, 22, 60, 255))      # torso
+    draw_rect(img, 0, 22, 104, 32, (74, 48, 104, 255))    # belly plates
+    draw_rect(img, 0, 52, 32, 21, (34, 20, 58, 255))      # neck
+    draw_rect(img, 0, 76, 52, 26, (44, 26, 70, 255))      # skull
+    draw_rect(img, 4, 84, 44, 9, (162, 70, 214, 255))     # eye glow band
+    draw_rect(img, 56, 76, 28, 14, (72, 44, 104, 255))    # snout
+    draw_rect(img, 56, 92, 12, 7, (206, 196, 226, 255))   # horns
+    draw_rect(img, 0, 106, 108, 24, (62, 38, 92, 255))    # wing membrane
+    draw_rect(img, 112, 106, 64, 14, (48, 30, 76, 255))   # inner vane
+    draw_rect(img, 0, 132, 64, 32, (38, 24, 62, 255))     # tail
+    draw_rect(img, 66, 132, 52, 12, (150, 62, 202, 255))  # tail fin
+    draw_rect(img, 120, 150, 20, 18, (30, 18, 50, 255))   # legs
     return img
 
 
@@ -469,7 +480,7 @@ def main():
               skin_texture((52, 40, 28, 255), (74, 56, 40, 255), (170, 90, 255, 255), 63))
     write_png(os.path.join(entity, "elemental_warden.png"), 64, 64,
               skin_texture((60, 58, 70, 255), (86, 74, 110, 255), (255, 200, 110, 255), 64))
-    write_png(os.path.join(entity, "nox_thal.png"), 128, 160, dragon_texture())
+    write_png(os.path.join(entity, "nox_thal.png"), 256, 256, dragon_texture())
     write_png(os.path.join(entity, "aether_manta.png"), 64, 64, manta_texture())
 
     # ---- Particles ----

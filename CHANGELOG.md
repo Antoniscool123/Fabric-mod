@@ -1,0 +1,86 @@
+# Changelog
+
+All notable changes to Aetherius: Echoes of the Shattered Sky.
+The mod is in alpha: versions are `1.0.0-alpha.N`, each one a playable checkpoint rather than a
+finished product. Jars are attached to the matching GitHub release.
+
+## [1.0.0-alpha.5] — 2026-11-11
+
+Playability patch. The world already loaded in alpha.4; this release makes the things you can
+actually click on work.
+
+### Fixed
+
+- **The Chronicle (K) is interactive again.** `ChronicleScreen.init()` used to ask the server to
+  open the book, the server replied "open", and the client built a brand new screen on top — over
+  and over. Every click, the Close button and even ESC were undone within a frame. `ACTION_OPEN`
+  is now a pure snapshot request, and `OPEN_CHRONICLE` is ignored while a screen is already open.
+  Tabs, quest rows, tracking and Close all respond; ESC closes the book.
+- **Nox'Thal no longer floats apart.** The model mixed body-space and part-space offsets: the head
+  sat about 46 model pixels above the neck, and two head boxes were anchored to a different origin
+  than the skull. The model is rebuilt in absolute model space with pivots on the real joints
+  (shoulders, neck base, neck top, tail root), the skull/snout/horns are one part so head rotation
+  cannot split them, the atlas is a matching 256×256 sheet, and the hitbox is 3.0 × 3.2 so the
+  nameplate, shadow and hit tests line up with the silhouette. Wings, tail, neck and a gentle
+  hover bob are still animated per boss phase.
+- **`/aetherius dimension` exists.** It was documented but never registered. Now there is
+  `dimension` (teleport onto the Shattered Sky surface) and `dimension return` (back to the
+  Overworld spawn). The root command no longer requires op, so travelling and reading your own
+  state work in singleplayer without cheats; every mutating subcommand re-checks permission
+  level 2. `/aetherius spells` and `/aetherius quests` are new read-only shortcuts.
+
+### Changed
+
+- **No more missing sound files.** `sounds.json` guessed vanilla `.ogg` paths (`item/firecharge_use`,
+  `entity/warden/sonic_boom`, …), which produced 12 warnings per session, and 14 mod-owned sound
+  events had no audio at all (`Unable to play empty soundEvent: aetherius:boss_nox_roar`). Both are
+  gone: `ModSounds` now aliases real vanilla `SoundEvents`, so the compiler guarantees every sound
+  exists and the mod ships no `sounds.json`.
+- Chronicle Tome use no longer sends a redundant client→server open request; the server answers
+  with open + snapshot in one round trip.
+- CI jar gate now checks `textures/entity/nox_thal.png` instead of the removed `sounds.json`.
+
+### Added
+
+- `CHANGELOG.md` (this file).
+- `docs/OPTIONAL_MODS.md` — exactly which companion mods are safe, with tested versions, and what
+  Aetherius explicitly does *not* need (no TerraBlender, no resource pack).
+- README command table with the real permission level of every subcommand.
+
+### Verified
+
+- All six offline checkers green: `check_java`, `check_api`, `check_refs`, `check_lang`,
+  `check_chronicle`, `check_data` (110 JSON files).
+- `docs/VERIFICATION.md` §0c records the alpha.4 live log and the root cause of each bug above.
+
+### Known gaps
+
+- No one has played the story end-to-end: quest rewards, boss phases in real combat and the Cosmic
+  Forge are still only statically verified.
+- Textures and models remain generated placeholders.
+- The biome *injection* into vanilla worldgen still needs TerraBlender or a datapack; the mod's own
+  answer is the runtime blight system plus its own dimension.
+
+## [1.0.0-alpha.4] — 2026-11-11
+
+- Fixed the fatal world-load crash: biome JSON emitted `"carvers": []` where 1.20.1 needs an
+  object; block models double-prefixed the namespace (`aetherius:block/minecraft:block/dirt`).
+- Added `tools/check_data.py` (biome/dimension/model/blockstate/recipe/feature shapes) as a sixth
+  CI checker; removed two orphaned loot tables and an unused recipe key.
+- Mood sounds unified on `minecraft:ambient.cave` so every biome resolves.
+
+## [1.0.0-alpha.3] — 2026-11-10
+
+- Worldgen moved to datapack JSON (dimension, dimension type, three biomes, placed/configured
+  features) instead of code registration.
+- Fixed the gravity mixin so it cannot fail to apply (`require = 0`).
+
+## [1.0.0-alpha.2] — 2026-11-10
+
+- First CI-packaged jar: 131 Java files, 18 spells, 14 quests, 12 lore entries, 3 biomes, 1
+  dimension, 48 textures, 65 models.
+
+## [1.0.0-alpha.1] — 2026-11-09
+
+- Initial scaffold: registries, magic system, runes, chronicle, blight, boss AI, four mixins,
+  client HUD and screens.

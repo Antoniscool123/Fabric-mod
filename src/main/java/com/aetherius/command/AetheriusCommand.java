@@ -7,6 +7,8 @@ import com.aetherius.api.magic.PlayerMagicCapability;
 import com.aetherius.api.magic.Rune;
 import com.aetherius.api.magic.SpellSchool;
 import com.aetherius.api.spell.SpellRegistry;
+import com.aetherius.dimension.AetherDimensions;
+import com.aetherius.dimension.ShatteredSkyChunkGenerator;
 import com.aetherius.entity.NoxThalEntity;
 import com.aetherius.network.AetherNetworking;
 import com.aetherius.registry.ModEntities;
@@ -18,9 +20,11 @@ import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
@@ -39,16 +43,27 @@ public final class AetheriusCommand {
 
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
         dispatcher.register(CommandManager.literal("aetherius")
-                .requires(source -> source.hasPermissionLevel(2))
+                // Everyone may read their own state, open the book and travel; world-editing
+                // subcommands below re-apply the op requirement themselves.
+                .requires(source -> source.hasPermissionLevel(0))
+                .then(CommandManager.literal("dimension")
+                        .executes(AetheriusCommand::teleportToShatteredSky)
+                        .then(CommandManager.literal("return")
+                                .executes(AetheriusCommand::teleportToOverworld)))
+                .then(CommandManager.literal("spells").executes(AetheriusCommand::listSpells))
+                .then(CommandManager.literal("quests").executes(AetheriusCommand::listQuests))
                 .then(CommandManager.literal("mana")
+                        .requires(AetheriusCommand::isOp)
                         .then(CommandManager.literal("fill").executes(ctx -> setMana(ctx, -1f)))
                         .then(CommandManager.literal("drain").executes(ctx -> setMana(ctx, 0f)))
                         .then(CommandManager.argument("value", FloatArgumentType.floatArg(0f, 1000f))
                                 .executes(ctx -> setMana(ctx, FloatArgumentType.getFloat(ctx, "value")))))
                 .then(CommandManager.literal("tension")
+                        .requires(AetheriusCommand::isOp)
                         .then(CommandManager.argument("value", FloatArgumentType.floatArg(0f, 100f))
                                 .executes(ctx -> setTension(ctx, FloatArgumentType.getFloat(ctx, "value")))))
                 .then(CommandManager.literal("rune")
+                        .requires(AetheriusCommand::isOp)
                         .then(CommandManager.literal("unlock_all").executes(AetheriusCommand::unlockAllRunes))
                         .then(CommandManager.literal("unlock")
                                 .then(CommandManager.argument("rune", StringArgumentType.word())
@@ -58,12 +73,14 @@ public final class AetheriusCommand {
                 .then(CommandManager.literal("spell")
                         .then(CommandManager.literal("list").executes(AetheriusCommand::listSpells)))
                 .then(CommandManager.literal("quest")
+                        .requires(AetheriusCommand::isOp)
                         .then(CommandManager.literal("list").executes(AetheriusCommand::listQuests))
                         .then(CommandManager.literal("complete")
                                 .then(CommandManager.argument("id", StringArgumentType.string())
                                         .executes(ctx -> completeQuest(ctx,
                                                 StringArgumentType.getString(ctx, "id"))))))
                 .then(CommandManager.literal("blight")
+                        .requires(AetheriusCommand::isOp)
                         .then(CommandManager.literal("info").executes(AetheriusCommand::blightInfo))
                         .then(CommandManager.literal("infect")
                                 .then(CommandManager.argument("strength", IntegerArgumentType.integer(1, 100))
@@ -74,6 +91,7 @@ public final class AetheriusCommand {
                                         .executes(ctx -> purify(ctx,
                                                 IntegerArgumentType.getInteger(ctx, "radius"))))))
                 .then(CommandManager.literal("boss")
+                        .requires(AetheriusCommand::isOp)
                         .then(CommandManager.literal("spawn").executes(AetheriusCommand::spawnBoss))
                         .then(CommandManager.literal("phase")
                                 .then(CommandManager.argument("phase", IntegerArgumentType.integer(0, 2))
@@ -82,6 +100,43 @@ public final class AetheriusCommand {
                 .then(CommandManager.literal("chronicle").executes(AetheriusCommand::openChronicle))
                 .then(CommandManager.literal("observatory").executes(AetheriusCommand::findObservatory))
                 .then(CommandManager.literal("attune").executes(AetheriusCommand::attune)));
+    }
+
+    private static boolean isOp(ServerCommandSource source) {
+        return source.hasPermissionLevel(2);
+    }
+
+    private static int teleportToShatteredSky(CommandContext<ServerCommandSource> ctx)
+            throws CommandSyntaxException {
+        ServerPlayerEntity player = ctx.getSource().getPlayerOrThrow();
+        MinecraftServer server = ctx.getSource().getServer();
+        ServerWorld target = server.getWorld(AetherDimensions.SHATTERED_SKY);
+        if (target == null) {
+            ctx.getSource().sendError(Text.translatable("aetherius.command.dimension_missing"));
+            return 0;
+        }
+        int y = Math.max(target.getBottomY() + 8,
+                ShatteredSkyChunkGenerator.surfaceHeight((int) player.getX(), (int) player.getZ(),
+                        target.getSeed()) + 3);
+        player.teleport(target, player.getX(), y, player.getZ(), player.getYaw(), player.getPitch());
+        player.setPortalCooldown(100);
+        player.fallDistance = 0f;
+        ctx.getSource().sendFeedback(() -> Text.translatable("aetherius.command.dimension_enter"), false);
+        return 1;
+    }
+
+    private static int teleportToOverworld(CommandContext<ServerCommandSource> ctx)
+            throws CommandSyntaxException {
+        ServerPlayerEntity player = ctx.getSource().getPlayerOrThrow();
+        MinecraftServer server = ctx.getSource().getServer();
+        ServerWorld overworld = server.getOverworld();
+        BlockPos spawn = overworld.getSpawnPos();
+        player.teleport(overworld, spawn.getX() + 0.5, spawn.getY() + 1.0, spawn.getZ() + 0.5,
+                player.getYaw(), player.getPitch());
+        player.setPortalCooldown(100);
+        player.fallDistance = 0f;
+        ctx.getSource().sendFeedback(() -> Text.translatable("aetherius.command.dimension_return"), false);
+        return 1;
     }
 
     private static int setMana(CommandContext<ServerCommandSource> ctx, float value)

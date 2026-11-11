@@ -207,7 +207,7 @@ Behaviors.selector(
   `WaitNode`, `CooldownNode`. `CooldownNode` keys its timer in blackboard memory as
   `"cd:" + key`, so a tree can be reset safely without losing pacing.
 - `BehaviorNode#reset()` is called on phase enter/exit, never per tick.
-- Every node carries a `label()` used by `/aetherius boss debug` to print the active branch.
+- Every node carries a `label()` used by `/aetherius boss phase <0-2>` to force a branch (the branch name is printed in the boss bar).
 
 ---
 

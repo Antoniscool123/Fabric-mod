@@ -1,6 +1,7 @@
 package com.aetherius.item;
 
-import com.aetherius.network.ChronicleActionC2SPacket;
+import com.aetherius.api.magic.MagicComponents;
+import com.aetherius.network.ChronicleSyncS2CPacket;
 import com.aetherius.network.OpenChronicleS2CPacket;
 import net.minecraft.client.item.TooltipContext;
 import net.minecraft.entity.player.PlayerEntity;
@@ -27,11 +28,13 @@ public class ChronicleTomeItem extends Item {
     public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
         ItemStack stack = user.getStackInHand(hand);
         if (world.isClient()) {
-            ChronicleActionC2SPacket.send(ChronicleActionC2SPacket.ACTION_OPEN, "");
+            // The server owns this: it answers with OPEN_CHRONICLE + a fresh snapshot. Sending
+            // our own "open" request here only duplicated that round trip.
             return TypedActionResult.success(stack);
         }
         if (user instanceof ServerPlayerEntity player) {
             OpenChronicleS2CPacket.send(player);
+            ChronicleSyncS2CPacket.send(player, MagicComponents.get(player));
         }
         return TypedActionResult.success(stack);
     }

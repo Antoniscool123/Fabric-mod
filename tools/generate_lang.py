@@ -15,11 +15,6 @@ L["category.aetherius"] = "Aetherius"
 L["key.aetherius.chronicle"] = "Open the Chronicle"
 L["key.aetherius.inscribe"] = "Inscribe next rune (Sneak: clear)"
 
-for sub in ["spell_sol", "spell_luna", "spell_terra", "spell_caelum", "spell_nox",
-            "spell_resonant", "spell_nova_warp", "astral_backfire", "chronicle_update",
-            "starfall", "boss_nox_roar", "observatory_hum", "altar_purify", "forge_strike"]:
-    L[f"aetherius.subtitle.{sub}"] = sub.replace("_", " ").title()
-
 # ------------------------------------------------------------------ blocks
 blocks = {
     "star_vein_ore": "Star-Vein Ore",
@@ -325,6 +320,9 @@ L["aetherius.storm.announce"] = "Time is moving sideways. Keep to the islands."
 L["aetherius.rift.unavailable"] = "The Shattered Sky is not loaded."
 L["aetherius.warden.heart_dropped"] = "The Warden yields %s"
 L["aetherius.command.rune_unlocked"] = "Unlocked %s"
+L["aetherius.command.dimension_enter"] = "Stepped through the Sky Rift into the Shattered Sky"
+L["aetherius.command.dimension_return"] = "Returned to the Overworld"
+L["aetherius.command.dimension_missing"] = "The Shattered Sky dimension is not registered"
 
 with open(OUT, "w", encoding="utf-8") as fh:
     json.dump(L, fh, indent=2, ensure_ascii=False)

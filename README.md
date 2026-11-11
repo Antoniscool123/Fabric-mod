@@ -24,8 +24,8 @@ Assets:   48 generated textures · 65 block/item models · 45 data files
 
 ## Download & play
 
-1. Download **[aetherius-1.0.0-alpha.4.jar](https://github.com/Antoniscool123/Fabric-mod/releases/download/v1.0.0-alpha.4/aetherius-1.0.0-alpha.4.jar)**
-   (plus [`SHA256SUMS.txt`](https://github.com/Antoniscool123/Fabric-mod/releases/download/v1.0.0-alpha.4/SHA256SUMS.txt)).
+1. Download **[aetherius-1.0.0-alpha.5.jar](https://github.com/Antoniscool123/Fabric-mod/releases/download/v1.0.0-alpha.5/aetherius-1.0.0-alpha.5.jar)**
+   (plus [`SHA256SUMS.txt`](https://github.com/Antoniscool123/Fabric-mod/releases/download/v1.0.0-alpha.5/SHA256SUMS.txt)).
 2. Install **Fabric Loader 0.15.11+** for Minecraft **1.20.1**.
 3. Drop the jar **and** [Fabric API 0.92.2+1.20.1](https://modrinth.com/mod/fabric-api) into `.minecraft/mods`.
 4. Launch, create a world, and press **K** to open the Chronicle.
@@ -33,9 +33,43 @@ Assets:   48 generated textures · 65 block/item models · 45 data files
 The jar is produced by GitHub Actions (`.github/workflows/build.yml`) on every tag:
 JDK 17 → Gradle 8.6 → Loom 1.5.8 → `compileJava` + `build` → attached to the release.
 
-> **Alpha caveat:** the mod *compiles and packages* cleanly in CI, but no one has launched
-> it in a running client yet. Treat the first launch as a test: if it crashes, the stack
-> trace names the exact class. `docs/VERIFICATION.md` lists the known runtime risks.
+> **Alpha caveat:** the mod launches and loads a world on Fabric 1.20.1 (log in
+> `docs/VERIFICATION.md` §0b/§0c), but the story has not been played end-to-end yet.
+> Gameplay content is the least-verified part; the crash-prone parts (worldgen, resources)
+> are now covered by six offline checkers that run before every build.
+
+### Commands
+
+| Command | Permission | What it does |
+|---|---|---|
+| `/aetherius dimension` | none | teleport to `aetherius:shattered_sky`, placed on the surface |
+| `/aetherius dimension return` | none | teleport back to the Overworld spawn |
+| `/aetherius chronicle` | none | open the Chronicle book |
+| `/aetherius spells` / `quests` | none | list the 19 spells / 14 quests in chat |
+| `/aetherius observatory` | none | print the nearest Starlight Observatory |
+| `/aetherius attune` | none | re-attune your runes |
+| `/aetherius mana <0-1000>` / `fill` / `drain` | op (2) | set the mana pool |
+| `/aetherius tension <0-100>` | op (2) | set Astral Tension (100 = backfire) |
+| `/aetherius rune list` / `unlock <rune>` / `unlock_all` | op (2) | rune bookkeeping |
+| `/aetherius quest complete <id>` | op (2) | force-complete a quest |
+| `/aetherius blight info` / `infect <1-100>` / `purify <1-128>` | op (2) | chunk blight |
+| `/aetherius boss spawn` / `phase <0-2>` | op (2) | summon Nox'Thal / force a phase |
+
+### Optional companion mods
+
+Aetherius is self-sufficient: it needs **Fabric API only**. These are optional quality-of-life
+additions — nothing breaks if you skip them, and none of them are required for any feature.
+
+| Mod | Why you might want it |
+|---|---|
+| [Mod Menu](https://modrinth.com/mod/modmenu) | shows the mod entry, config screen slot |
+| [Fabric Language Kotlin](https://modrinth.com/mod/fabric-language-kotlin) | only if you add Kotlin-based helper mods |
+| [Cloth Config API](https://modrinth.com/mod/cloth-config) | future client options screen |
+| [Iris Shaders](https://modrinth.com/mod/iris) + [Sodium](https://modrinth.com/mod/sodium) | the Shattered Sky looks considerably better with shaders |
+| [Jade](https://modrinth.com/mod/jade) | block/entity tooltips, handy while testing spawns |
+| [Xaero's Minimap](https://modrinth.com/mod/xaeros-minimap) | the dimension is large; a map helps you find islands |
+
+Details and version pins: [`docs/OPTIONAL_MODS.md`](docs/OPTIONAL_MODS.md).
 
 ---
 
@@ -62,7 +96,7 @@ JDK 17 → Gradle 8.6 → Loom 1.5.8 → `compileJava` + `build` → attached to
 | Client (HUD, boss bar, Chronicle screen, renderers, particles, keybinds) | implemented |
 | Registries, mixins, networking, commands | implemented |
 | Datapack content (dimension, biomes, loot, recipes, tags) | implemented |
-| Assets (textures, models, lang, sounds) | generated / placeholder-quality |
+| Assets (textures, models, lang) | generated / placeholder-quality; audio is vanilla |
 | Compilation & packaging | **verified in CI** — JDK 17 / Gradle 8.6 / Loom 1.5.8, `compileJava` + `build` green, jar released |
 | Runtime (launch) | **verified** — client boots, all 4 mixins apply, `[Aetherius] Initialised in 205 ms` |
 | Runtime (world load) | first attempt crashed on a biome JSON bug (fixed in `alpha.4`, see `docs/VERIFICATION.md` §0b) |
@@ -217,7 +251,7 @@ src/main/java/com/aetherius/
 ├── api/chronicle/              quests, chapters, objectives, rewards, manager
 ├── block/ block/entity/        blocks and five block entities
 ├── client/                     HUD, boss bar, Chronicle screen, renderers, particles
-├── command/                    /aetherius admin surface
+├── command/                    /aetherius command tree (travel, admin, read-only)
 ├── compat/                     TerraBlender detection
 ├── dimension/                  dimension keys, teleporter, chunk generator, storms
 ├── entity/ entity/ai/          base mobs + shared AI goals
@@ -226,13 +260,13 @@ src/main/java/com/aetherius/
 ├── mixin/                      4 mixins
 ├── multiblock/                 pattern matching + structure definitions
 ├── network/                    packets + channel registration
-├── registry/                   sounds, particles, effects, blocks, items, entities, BEs
+├── registry/                   sound aliases, particles, effects, blocks, items, entities, BEs
 ├── util/                       Aeth (id/lang helpers)
 ├── world/ world/blight/        world state, starfall, blight manager
 └── worldgen/                   worldgen bootstrap, two features
 
 src/main/resources/
-├── assets/aetherius/           textures, blockstates, models, particles, lang, sounds
+├── assets/aetherius/           textures, blockstates, models, particles, lang
 ├── data/aetherius/             dimension, biomes, loot, recipes, tags
 ├── data/minecraft/             tool tags
 ├── fabric.mod.json
@@ -280,7 +314,7 @@ The asset pipeline is pure Python (no Pillow, no external downloads):
 | `tools/check_refs.py` | every `ModBlocks.X`/`ModItems.X`/… reference resolves to a declared field |
 | `tools/check_chronicle.py` | quest flags, objective classes, rune constants resolve |
 | `tools/check_lang.py` | translation keys used in Java exist in `en_us.json` |
-| `tools/check_data.py` | biome/dimension/model/sounds JSON shapes — encodes the bugs found at first launch |
+| `tools/check_data.py` | biome/dimension/model/recipe JSON shapes — encodes the bugs found at first launch |
 
 Run them all:
 
@@ -297,7 +331,8 @@ python3 tools/check_java.py && python3 tools/check_refs.py \
 - **Gameplay untested.** The client launches and the mod initialises, but no one has walked
   through Act I end-to-end yet. See `docs/VERIFICATION.md` for exactly what was checked.
 - Textures and models are generated placeholders — readable silhouettes, not final art.
-- No custom sounds: `sounds.json` maps 14 events onto vanilla sound files.
+- No custom audio files: every sound is an alias of a real vanilla `SoundEvents` constant, so
+  there is no `sounds.json` and nothing can point at a missing `.ogg`.
 - Biome *injection* into vanilla worldgen needs TerraBlender or a datapack override; the
   mod's own answer to "where are the Blighted Barrens" is the runtime blight system.
 - The Chronicle screen is a custom `Screen` (no `ScreenHandler`), so it is read-mostly by

@@ -287,36 +287,7 @@ def main():
         {"type": "minecraft:biome"},
     ]))
 
-    # ---------------------------------------------------------------- sounds
-    SOUND_EVENTS = {
-        "spell_sol": "item/firecharge_use",
-        "spell_luna": "entity/player/splash_high_speed",
-        "spell_terra": "block/deepslate/break",
-        "spell_caelum": "item/trident/thunder",
-        "spell_nox": "entity/warden/sonic_boom",
-        "spell_resonant": "block/amethyst_block/chime",
-        "spell_nova_warp": "entity/ender_dragon/growl",
-        "astral_backfire": "entity/generic/explode",
-        "chronicle_update": "ui/toast/challenge_complete",
-        "starfall": "entity/lightning_bolt/impact",
-        "boss_nox_roar": "entity/ender_dragon/growl",
-        "observatory_hum": "block/beacon/ambient",
-        "altar_purify": "block/beacon/activate",
-        "forge_strike": "block/anvil/use",
-    }
-    sounds = {}
-    for event, path in SOUND_EVENTS.items():
-        sounds[event] = {
-            "subtitle": f"aetherius.subtitle.{event}",
-            "sounds": [{"name": f"minecraft:{path}", "volume": 1.0, "pitch": 1.0}],
-        }
-    sounds_path = os.path.join(RES, "assets", "aetherius", "sounds.json")
-    os.makedirs(os.path.dirname(sounds_path), exist_ok=True)
-    with open(sounds_path, "w", encoding="utf-8") as fh:
-        json.dump(sounds, fh, indent=2)
-        fh.write("\n")
-
-    # ---------------------------------------------------------------- tags
+# ---------------------------------------------------------------- tags
     pickaxe = [f"aetherius:{b}" for b in
                ["star_vein_ore", "aether_blood_ore", "celestial_pillar", "aether_forge",
                 "aether_altar_core", "telescope", "aether_fountain", "sky_rift_anchor"]]

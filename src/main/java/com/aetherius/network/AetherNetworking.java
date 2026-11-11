@@ -77,8 +77,10 @@ public final class AetherNetworking {
         ScreenShakeS2CPacket.send(world, origin, radius, intensity);
     }
 
+    /** Opens the book and immediately pushes a snapshot, so the client never renders stale data. */
     public static void openChronicle(ServerPlayerEntity player) {
         ServerPlayNetworking.send(player, OPEN_CHRONICLE, PacketByteBufs.empty());
+        ChronicleSyncS2CPacket.send(player, MagicComponents.get(player));
     }
 
     // =====================================================================
@@ -167,7 +169,10 @@ public final class AetherNetworking {
 
     private static void handleChronicleAction(ServerPlayerEntity player, int action, String questId) {
         switch (action) {
-            case 0 -> openChronicle(player);
+            // Action 0 is "give me the current state", NOT "open the book". Replying with an
+            // open packet here made the client recreate the screen every frame, which swallowed
+            // every click and even ESC (the screen was replaced as fast as it closed).
+            case 0 -> ChronicleSyncS2CPacket.send(player, MagicComponents.get(player));
             case 1 -> ChronicleManager.get().onObservatoryVisited(player); // debug/continuity check
             case 2 -> {
                 Identifier id = Identifier.tryParse(questId);

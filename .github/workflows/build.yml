@@ -137,7 +137,7 @@ jobs:
                    data/aetherius/dimension_type/shattered_sky.json \
                    data/aetherius/worldgen/placed_feature/star_vein_ore.json \
                    data/aetherius/loot_tables/blocks/star_vein_ore.json \
-                   assets/aetherius/sounds.json; do
+                   assets/aetherius/textures/entity/nox_thal.png; do
             if grep -q " $p$" jar-contents.txt; then
               echo "ok      $p"
             else
