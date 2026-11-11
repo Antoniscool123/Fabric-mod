@@ -24,12 +24,12 @@ public class StarVeinOreBlock extends Block {
     }
 
     @Override
-    public BlockState onBreak(World world, BlockPos pos, BlockState state, PlayerEntity player) {
+    public void onBreak(World world, BlockPos pos, BlockState state, PlayerEntity player) {
         if (!world.isClient() && player instanceof ServerPlayerEntity serverPlayer) {
             ChronicleManager.get().onStarVeinBroken(serverPlayer);
             StarfallManager.get().triggerStarfall(serverPlayer.getServerWorld(), pos, 48);
         }
-        return super.onBreak(world, pos, state, player);
+        super.onBreak(world, pos, state, player);
     }
 
     @Override

@@ -117,7 +117,7 @@ public class ElementalWardenEntity extends HostileEntity {
             case TERRA -> ModSounds.SPELL_TERRA;
             case CAELUM -> ModSounds.SPELL_CAELUM;
         };
-        world.playSound(null, this.getBlockPos(), castSound, getSoundCategory(), 1.4f, 0.8f);
+        world.playSound(null, this.getBlockPos(), castSound, bossSoundCategory(), 1.4f, 0.8f);
         switch (variant) {
             case SOL -> {
                 target.setOnFireFor(6);
@@ -150,7 +150,7 @@ public class ElementalWardenEntity extends HostileEntity {
                         EntityType.LIGHTNING_BOLT.create(world);
                 if (bolt != null) {
                     bolt.refreshPositionAfterTeleport(target.getPos());
-                    bolt.setChanneler(this);
+                    bolt.setChanneler(target instanceof ServerPlayerEntity channeler ? channeler : null);
                     world.spawnEntity(bolt);
                 }
                 target.addStatusEffect(new StatusEffectInstance(StatusEffects.LEVITATION, 40, 0));
@@ -158,7 +158,7 @@ public class ElementalWardenEntity extends HostileEntity {
         }
     }
 
-    private net.minecraft.sound.SoundCategory getSoundCategory() {
+    private net.minecraft.sound.SoundCategory bossSoundCategory() {
         return net.minecraft.sound.SoundCategory.HOSTILE;
     }
 

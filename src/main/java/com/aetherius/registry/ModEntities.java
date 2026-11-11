@@ -69,9 +69,11 @@ public final class ModEntities {
     }
 
     private static EntityType<ElementalWardenEntity> warden(String path, ElementalWardenEntity.Variant variant) {
-        return register(path, FabricEntityTypeBuilder
-                .create(SpawnGroup.MONSTER, (type, world) -> new ElementalWardenEntity(type, world, variant))
-                .dimensions(EntityDimensions.fixed(1.6f, 3.4f))
+        EntityType.EntityFactory<ElementalWardenEntity> factory =
+                (type, world) -> new ElementalWardenEntity(type, world, variant);
+        FabricEntityTypeBuilder<ElementalWardenEntity> builder =
+                FabricEntityTypeBuilder.create(SpawnGroup.MONSTER, factory);
+        return register(path, builder.dimensions(EntityDimensions.fixed(1.6f, 3.4f))
                 .trackRangeChunks(10).fireImmune().build());
     }
 

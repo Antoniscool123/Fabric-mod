@@ -21,7 +21,7 @@ public record MagicCosts(float mana, float tension) {
         for (Rune rune : combination.runes()) {
             mana += rune.manaCost();
             tension += rune.tensionCost();
-            if (rune.school() == previous) {
+            if (previous != null && rune.school() == previous.school()) {
                 sameSchoolStreak++;
                 mana += rune.manaCost() * 0.25f * sameSchoolStreak;
                 tension += rune.tensionCost() * 0.15f * sameSchoolStreak;
@@ -31,7 +31,7 @@ public record MagicCosts(float mana, float tension) {
             previous = rune;
         }
         // Three distinct schools earns a "Concordance" discount (combinatorics reward).
-        if (combination.distinctSchools() == 3) {
+        if (combination.distinctSchools().size() == 3) {
             mana *= 0.9f;
         }
         return new MagicCosts(MathHelper.ceil(mana), tension);

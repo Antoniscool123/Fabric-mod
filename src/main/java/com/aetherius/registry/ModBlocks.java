@@ -38,7 +38,7 @@ public final class ModBlocks {
             .luminance(state -> 3).sounds(BlockSoundGroup.STONE));
 
     public static final Block STAR_ASH = new StarAshBlock(AbstractBlock.Settings.create()
-            .mapColor(MapColor.DARK_GRAY).strength(0.6f).sounds(BlockSoundGroup.SOUL_SAND)
+            .mapColor(MapColor.GRAY).strength(0.6f).sounds(BlockSoundGroup.SOUL_SAND)
             .ticksRandomly());
 
     public static final Block STARLIT_GRASS_BLOCK = new StarlitGrassBlock(AbstractBlock.Settings.create()

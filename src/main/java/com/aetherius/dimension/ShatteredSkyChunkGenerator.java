@@ -211,7 +211,8 @@ public class ShatteredSkyChunkGenerator extends ChunkGenerator {
     }
 
     @Override
-    public void buildSurface(ChunkRegion region, StructureAccessor structures, Chunk chunk) {
+    public void buildSurface(ChunkRegion region, StructureAccessor structures,
+                             NoiseConfig noiseConfig, Chunk chunk) {
         // Surface is authored in generateIslands; nothing to smooth here.
     }
 
@@ -220,6 +221,11 @@ public class ShatteredSkyChunkGenerator extends ChunkGenerator {
                       net.minecraft.world.biome.source.BiomeAccess biomeAccess, StructureAccessor structureAccessor,
                       Chunk chunk, net.minecraft.world.gen.GenerationStep.Carver carverStep) {
         // No caves: the Shattered Sky's interiors are sealed ruins.
+    }
+
+    @Override
+    public void getDebugHudText(java.util.List<String> text, NoiseConfig noiseConfig, BlockPos pos) {
+        text.add("Aetherius: Shattered Sky (island field, seed " + worldSeed() + ")");
     }
 
     @Override

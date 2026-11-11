@@ -33,7 +33,18 @@ public final class ModStatusEffects {
     }
 
     private static StatusEffect register(String path, StatusEffectCategory category, int color) {
-        return Registry.register(Registries.STATUS_EFFECT, Aeth.id(path), new StatusEffect(category, color));
+        return Registry.register(Registries.STATUS_EFFECT, Aeth.id(path),
+                new AetherStatusEffect(category, color));
+    }
+
+    /**
+     * StatusEffect's constructor is protected, so every effect is created through this
+     * subclass rather than by instantiating StatusEffect directly.
+     */
+    private static final class AetherStatusEffect extends StatusEffect {
+        private AetherStatusEffect(StatusEffectCategory category, int color) {
+            super(category, color);
+        }
     }
 
     public static void register() {

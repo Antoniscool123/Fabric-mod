@@ -2,7 +2,9 @@ package com.aetherius.client.render;
 
 import com.aetherius.entity.AetherMantaEntity;
 import com.aetherius.util.Aeth;
+import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.entity.model.EntityModel;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.model.ModelData;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.model.ModelPartBuilder;
@@ -65,7 +67,8 @@ public class AetherMantaModel extends EntityModel<AetherMantaEntity> {
     }
 
     @Override
-    public ModelPart getPart() {
-        return root;
+    public void render(MatrixStack matrices, VertexConsumer vertices, int light, int overlay,
+                       float red, float green, float blue, float alpha) {
+        this.root.render(matrices, vertices, light, overlay, red, green, blue, alpha);
     }
 }

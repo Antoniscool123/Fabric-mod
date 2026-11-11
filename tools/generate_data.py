@@ -224,6 +224,77 @@ def main():
     for name, recipe in recipes.items():
         dump(f"recipes/{name}.json", recipe)
 
+    # ------------------------------------------------- worldgen: features
+    def ore_configured(size, targets):
+        return {
+            "type": "minecraft:ore",
+            "config": {
+                "size": size,
+                "discard_chance_on_air_exposure": 0.0,
+                "targets": [
+                    {"target": {"predicate_type": "minecraft:block_match", "block": block},
+                     "state": {"Name": state}}
+                    for block, state in targets
+                ],
+            },
+        }
+
+    def plain_configured(feature_type):
+        return {"type": feature_type, "config": {}}
+
+    def placed(feature, placement):
+        return {"feature": feature, "placement": placement}
+
+    star_vein_configured = ore_configured(6, [
+        ("minecraft:stone", "aetherius:star_vein_ore"),
+        ("minecraft:deepslate", "aetherius:star_vein_ore"),
+    ])
+    blood_configured = ore_configured(3, [
+        ("minecraft:deepslate", "aetherius:aether_blood_ore"),
+    ])
+
+    dump("worldgen/configured_feature/star_vein_ore.json", star_vein_configured)
+    dump("worldgen/configured_feature/aether_blood_ore.json", blood_configured)
+    dump("worldgen/configured_feature/starlight_observatory.json",
+         plain_configured("aetherius:starlight_observatory"))
+    dump("worldgen/configured_feature/mana_lily_patch.json",
+         plain_configured("aetherius:mana_lily_patch"))
+
+    def height_range(low, high):
+        return {
+            "type": "minecraft:height_range",
+            "height": {
+                "type": "minecraft:uniform",
+                "min_inclusive": {"absolute": low},
+                "max_inclusive": {"absolute": high},
+            },
+        }
+
+    dump("worldgen/placed_feature/star_vein_ore.json", placed("aetherius:star_vein_ore", [
+        {"type": "minecraft:count", "count": 6},
+        {"type": "minecraft:in_square"},
+        height_range(-48, 24),
+        {"type": "minecraft:biome"},
+    ]))
+    dump("worldgen/placed_feature/aether_blood_ore.json", placed("aetherius:aether_blood_ore", [
+        {"type": "minecraft:count", "count": 3},
+        {"type": "minecraft:in_square"},
+        height_range(-60, -12),
+        {"type": "minecraft:biome"},
+    ]))
+    dump("worldgen/placed_feature/starlight_observatory.json", placed("aetherius:starlight_observatory", [
+        {"type": "minecraft:rarity_filter", "chance": 140},
+        {"type": "minecraft:in_square"},
+        height_range(60, 140),
+        {"type": "minecraft:biome"},
+    ]))
+    dump("worldgen/placed_feature/mana_lily_patch.json", placed("aetherius:mana_lily_patch", [
+        {"type": "minecraft:count", "count": 8},
+        {"type": "minecraft:in_square"},
+        height_range(60, 120),
+        {"type": "minecraft:biome"},
+    ]))
+
     # ---------------------------------------------------------------- tags
     pickaxe = [f"aetherius:{b}" for b in
                ["star_vein_ore", "aether_blood_ore", "celestial_pillar", "aether_forge",

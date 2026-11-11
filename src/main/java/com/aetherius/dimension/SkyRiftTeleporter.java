@@ -61,7 +61,7 @@ public final class SkyRiftTeleporter {
         }
 
         player.teleport(target, x, y, z, player.getYaw(), player.getPitch());
-        player.setPortalCooldown();
+        player.setPortalCooldown(300);
         player.fallDistance = 0f;
         target.playSound(null, player.getBlockPos(), ModSounds.SPELL_NOVA_WARP, SoundCategory.PLAYERS, 1.4f, 0.9f);
         target.spawnParticles(com.aetherius.registry.ModParticles.STAR_DUST,

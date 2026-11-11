@@ -87,8 +87,8 @@ jobs:
             const out = [];
             for (let i = 0; i < lines.length; i++) {
               if (/\.java:\d+: (error|warning):/.test(lines[i]) || /^error:/.test(lines[i])) {
-                out.push(...lines.slice(i, Math.min(lines.length, i + 3)));
-                i += 2;
+                out.push(...lines.slice(i, Math.min(lines.length, i + 6)));
+                i += 5;
               } else if (/FAILURE:|What went wrong|Execution failed|Caused by:/.test(lines[i])) {
                 out.push(lines[i]);
               }

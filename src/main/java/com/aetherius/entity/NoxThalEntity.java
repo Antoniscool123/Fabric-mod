@@ -22,6 +22,7 @@ import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.boss.BossBar;
 import net.minecraft.entity.boss.ServerBossBar;
 import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.registry.tag.DamageTypeTags;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
@@ -608,6 +609,14 @@ public class NoxThalEntity extends PathAwareEntity {
 
     public void playBossSound(SoundEvent sound, float volume, float pitch) {
         this.getWorld().playSound(null, this.getBlockPos(), sound, SoundCategory.HOSTILE, volume, pitch);
+    }
+
+    /**
+     * Overload for the newer vanilla sounds that are exposed as registry entries rather than
+     * plain {@link SoundEvent} constants in 1.20.1.
+     */
+    public void playBossSound(RegistryEntry<SoundEvent> sound, float volume, float pitch) {
+        playBossSound(sound.value(), volume, pitch);
     }
 
     private List<LivingEntity> nearbyLiving(double radius) {

@@ -1,5 +1,6 @@
 package com.aetherius.api.chronicle;
 
+import com.aetherius.api.chronicle.objective.AnyOfObjective;
 import com.aetherius.api.chronicle.objective.CounterObjective;
 import com.aetherius.api.chronicle.objective.DimensionObjective;
 import com.aetherius.api.chronicle.objective.FlagObjective;
