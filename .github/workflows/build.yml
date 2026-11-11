@@ -144,7 +144,7 @@ jobs:
           if git status --porcelain ci-report | grep -q .; then
             git config user.name "ci-diagnostics"
             git config user.email "ci@example.invalid"
-            git add ci-report
+            git add -f ci-report
             git commit -q -m "ci: build diagnostics [skip ci]" || true
             git push origin "HEAD:${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}" || true
           fi

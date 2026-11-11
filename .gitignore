@@ -18,4 +18,3 @@ run/
 # Python tooling
 __pycache__/
 *.pyc
-ci-report/
