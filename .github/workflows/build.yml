@@ -1,0 +1,219 @@
+name: Build
+
+on:
+  push:
+    branches: [ "main", "arena/**" ]
+    tags: [ "v*" ]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle 8.6
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: "8.14"
+
+      - name: Regenerate assets and data
+        run: |
+          python3 tools/generate_textures.py
+          python3 tools/generate_models.py
+          python3 tools/generate_lang.py
+          python3 tools/generate_data.py
+
+      - name: Static consistency checks
+        run: |
+          python3 tools/check_java.py
+          python3 tools/check_refs.py
+          python3 tools/check_chronicle.py
+          python3 tools/check_lang.py
+          python3 tools/check_api.py
+          python3 tools/check_data.py
+
+      - name: Probe API symbols
+        run: gradle probeApi --no-daemon --console=plain > probe.txt 2>&1 || true
+        continue-on-error: true
+
+      - name: Compile (diagnostic pass)
+        run: |
+          set +e
+          gradle compileJava --no-daemon --console=plain --stacktrace 2>&1 | tee build.log
+          status=${PIPESTATUS[0]}
+          echo "GRADLE_EXIT=$status" >> "$GITHUB_ENV"
+          exit 0
+
+      - name: Dump compile classpath view of ChunkGenerator
+        if: always()
+        run: |
+          {
+            echo "== classpath"
+            CP=$(gradle -q printCompileClasspath --no-daemon --console=plain 2>/dev/null | sed -n '/CPSTART/,/CPEND/p' | sed '1d;$d')
+            echo "$CP" | tr ':' '\n' | grep -iE "minecraft|mapped|geckolib|intermediary" | head -20
+            echo "== ChunkGenerator on real compile classpath"
+            javap -classpath "$CP" net.minecraft.world.gen.chunk.ChunkGenerator 2>&1 | grep -i "column" | head -5
+            echo "== every ChunkGenerator class on classpath"
+            echo "$CP" | tr ':' '\n' | while read -r j; do
+              if [ -f "$j" ] && unzip -l "$j" 2>/dev/null | grep -q "net/minecraft/world/gen/chunk/ChunkGenerator.class"; then echo "HAS $j"; fi
+            done
+          } > cpview.txt 2>&1
+          cat cpview.txt
+
+      - name: Dump API symbol locations
+        if: always()
+        run: |
+          JAR=$(find ~/.gradle/caches/fabric-loom -name "*mapped*.jar" 2>/dev/null | head -1)
+          echo "mapped jar: $JAR" > symbols.txt
+          if [ -n "$JAR" ]; then
+            for n in Mth RegistryEntry DamageTypeTags EntityModel PersistentState SpriteProvider PlayerLookup Enchantments ExplosionSourceType RegistryEntryList ItemCooldownManager BlockEntityType; do
+              echo "== $n" >> symbols.txt
+              unzip -l "$JAR" | grep -E "(^|/)$n(\\$[A-Za-z]+)?\\.class" | awk '{print $4}' | head -6 >> symbols.txt
+            done
+            echo "== ChunkGenerator#getColumnSample" >> symbols.txt
+            javap -classpath "$JAR" net.minecraft.world.gen.chunk.ChunkGenerator 2>&1 | grep -i "column\|class " | head -8 >> symbols.txt
+            echo "== VerticalBlockSample" >> symbols.txt
+            javap -classpath "$JAR" net.minecraft.world.gen.chunk.VerticalBlockSample 2>&1 | head -6 >> symbols.txt
+            echo "== resolved fabric-api / geckolib" >> symbols.txt
+            find ~/.gradle/caches/modules-2/files-2.1 -maxdepth 2 -type d \( -name "fabric-api" -o -name "geckolib-fabric-1.20.1" \) 2>/dev/null | head -6 >> symbols.txt
+            find ~/.gradle/caches/modules-2/files-2.1 -path "*fabric-api*" -name "*.jar" 2>/dev/null | head -4 >> symbols.txt
+            echo "== PersistentState members" >> symbols.txt
+            javap -classpath "$JAR" net.minecraft.world.PersistentState 2>&1 | head -25 >> symbols.txt
+            echo "== EntityModel check" >> symbols.txt
+            javap -classpath "$JAR" net.minecraft.client.model.EntityModel 2>&1 | head -5 >> symbols.txt
+            javap -classpath "$JAR" net.minecraft.client.model.Model 2>&1 | head -8 >> symbols.txt
+          fi
+          cat symbols.txt
+
+      - name: Report failures
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let log = '';
+            try { log = fs.readFileSync('build.log', 'utf8'); } catch (e) { log = 'no build.log'; }
+            const lines = log.split(/\r?\n/);
+            const out = [];
+            for (let i = 0; i < lines.length; i++) {
+              if (/\.java:\d+: (error|warning):/.test(lines[i]) || /^error:/.test(lines[i])) {
+                out.push(...lines.slice(i, Math.min(lines.length, i + 6)));
+                i += 5;
+              } else if (/FAILURE:|What went wrong|Execution failed|Caused by:/.test(lines[i])) {
+                out.push(lines[i]);
+              }
+            }
+            let sym = '';
+            for (const f of ['cpview.txt', 'probe.txt', 'symbols.txt', 'jar-check.txt']) {
+              try { sym += '--- ' + f + ' ---\n' + fs.readFileSync(f, 'utf8'); }
+              catch (e) { sym += f + ': missing\n'; }
+            }
+            let body = `### CI compile report\n\nGradle exit code: \`${{ env.GRADLE_EXIT }}\`\n\n`
+                     + '```\n' + (out.length ? out.join('\n') : log.slice(-4000)) + '\n```';
+            body += '\n\n### API symbol locations\n\n```\n' + sym.slice(0, 12000) + '\n```';
+            if (body.length > 60000) body = body.slice(0, 60000) + '\n...truncated';
+            const issue = context.issue.number || 1;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner, repo: context.repo.repo,
+              issue_number: issue, body
+            });
+
+      - name: Publish diagnostics to the branch (readable without CI log access)
+        if: env.GRADLE_EXIT != '0'
+        run: |
+          mkdir -p ci-report
+          { echo "gradle exit: $GRADLE_EXIT"; echo; echo "--- errors ---";
+            grep -nE "\.java:[0-9]+: (error|warning):|^error:|FAILURE:|Caused by:" build.log | head -60; } > ci-report/errors.txt
+          cp cpview.txt ci-report/ 2>/dev/null || true
+          cp probe.txt ci-report/ 2>/dev/null || true
+          head -c 6000 symbols.txt > ci-report/symbols.txt 2>/dev/null || true
+          if git status --porcelain ci-report | grep -q .; then
+            git config user.name "ci-diagnostics"
+            git config user.email "ci@example.invalid"
+            git add -f ci-report
+            git commit -q -m "ci: build diagnostics [skip ci]" || true
+            git push origin "HEAD:${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}" || true
+          fi
+
+      - name: Fail on compile errors
+        if: env.GRADLE_EXIT != '0'
+        run: exit 1
+
+      - name: Assemble jar
+        if: env.GRADLE_EXIT == '0'
+        run: gradle build --no-daemon --console=plain --stacktrace
+
+      - name: Verify jar contents
+        if: env.GRADLE_EXIT == '0'
+        run: |
+          set -e
+          exec > >(tee jar-check.txt) 2>&1
+          JAR=$(ls build/libs/aetherius-*.jar | grep -v sources | head -1)
+          echo "checking $JAR"
+          unzip -l "$JAR" > jar-contents.txt
+          missing=0
+          for p in fabric.mod.json aetherius.mixins.json \
+                   com/aetherius/Aetherius.class com/aetherius/AetheriusClient.class \
+                   assets/aetherius/icon.png \
+                   assets/aetherius/lang/en_us.json \
+                   assets/aetherius/textures/block/star_vein_ore.png \
+                   assets/aetherius/textures/gui/mana_bar.png \
+                   assets/aetherius/models/block/sky_rift_portal.json \
+                   data/aetherius/dimension/shattered_sky.json \
+                   data/aetherius/dimension_type/shattered_sky.json \
+                   data/aetherius/worldgen/placed_feature/star_vein_ore.json \
+                   data/aetherius/loot_tables/blocks/star_vein_ore.json \
+                   assets/aetherius/textures/entity/nox_thal.png \
+                   assets/aetherius/geo/entity/nox_thal.geo.json \
+                   assets/aetherius/animations/entity/nox_thal.animation.json; do
+            if grep -q " $p$" jar-contents.txt; then
+              echo "ok      $p"
+            else
+              echo "MISSING $p"
+              missing=1
+            fi
+          done
+          echo "--- fabric.mod.json version + dependencies:"
+          unzip -p "$JAR" fabric.mod.json | python3 -c "import json,sys; d=json.load(sys.stdin); print('version', d['version']); print('depends', sorted(d['depends']))"
+          echo "--- fabric.mod.json version field:"
+          unzip -p "$JAR" fabric.mod.json | grep '"version"'
+          echo "--- entry count: $(wc -l < jar-contents.txt)"
+          exit $missing
+
+      - name: Checksums
+        if: env.GRADLE_EXIT == '0'
+        run: |
+          cd build/libs
+          sha256sum *.jar > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
+      - name: Upload jar
+        if: env.GRADLE_EXIT == '0'
+        uses: actions/upload-artifact@v4
+        with:
+          name: aetherius-jar
+          path: build/libs/*.jar
+          if-no-files-found: error
+
+      - name: Attach jar to release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            build/libs/*.jar
+            build/libs/SHA256SUMS.txt
+          generate_release_notes: true

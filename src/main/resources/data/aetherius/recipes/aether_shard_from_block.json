@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "aetherius:aether_blood"
+    }
+  ],
+  "result": {
+    "item": "aetherius:aether_shard",
+    "count": 2
+  }
+}

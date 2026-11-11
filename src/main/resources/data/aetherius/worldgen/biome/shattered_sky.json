@@ -1,0 +1,80 @@
+{
+  "temperature": 0.3,
+  "downfall": 0.2,
+  "has_precipitation": true,
+  "effects": {
+    "sky_color": 1708080,
+    "fog_color": 2824778,
+    "water_color": 4861826,
+    "water_fog_color": 2759492,
+    "mood_sound": {
+      "sound": "minecraft:ambient.cave",
+      "tick_delay": 6000,
+      "block_search_extent": 8,
+      "offset": 2.0
+    }
+  },
+  "carvers": {
+    "air": []
+  },
+  "features": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [
+      "aetherius:mana_lily_patch"
+    ],
+    [],
+    [],
+    [],
+    []
+  ],
+  "spawners": {
+    "monster": [
+      {
+        "type": "aetherius:void_specter",
+        "weight": 10,
+        "minCount": 1,
+        "maxCount": 3
+      },
+      {
+        "type": "aetherius:void_sentinel",
+        "weight": 3,
+        "minCount": 1,
+        "maxCount": 1
+      }
+    ],
+    "creature": [
+      {
+        "type": "aetherius:aether_manta",
+        "weight": 12,
+        "minCount": 1,
+        "maxCount": 2
+      }
+    ],
+    "ambient": [],
+    "axolotls": [],
+    "underground_water_creature": [],
+    "water_creature": [],
+    "water_ambient": [],
+    "misc": []
+  },
+  "spawn_costs": {
+    "aetherius:void_specter": {
+      "energy_budget": 0.7,
+      "charge": 0.15
+    },
+    "aetherius:void_sentinel": {
+      "energy_budget": 0.5,
+      "charge": 0.4
+    },
+    "aetherius:aether_manta": {
+      "energy_budget": 0.8,
+      "charge": 0.1
+    }
+  },
+  "creature_spawn_probability": 0.08
+}

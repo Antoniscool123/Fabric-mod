@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "top": "aetherius:block/aether_forge_top",
+    "side": "aetherius:block/aether_forge_side",
+    "bottom": "aetherius:block/aether_forge_side"
+  }
+}

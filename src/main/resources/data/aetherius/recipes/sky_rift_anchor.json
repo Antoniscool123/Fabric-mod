@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "CBC",
+    "BAB",
+    "CBC"
+  ],
+  "key": {
+    "C": {
+      "item": "minecraft:crying_obsidian"
+    },
+    "B": {
+      "item": "aetherius:aether_blood"
+    },
+    "A": {
+      "item": "aetherius:aether_shard"
+    }
+  },
+  "result": {
+    "item": "aetherius:sky_rift_anchor",
+    "count": 1
+  }
+}

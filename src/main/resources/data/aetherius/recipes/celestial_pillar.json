@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "QAQ",
+    "QLQ",
+    "QAQ"
+  ],
+  "key": {
+    "Q": {
+      "item": "minecraft:quartz_block"
+    },
+    "A": {
+      "item": "aetherius:aether_shard"
+    },
+    "L": {
+      "item": "minecraft:lapis_block"
+    }
+  },
+  "result": {
+    "item": "aetherius:celestial_pillar",
+    "count": 4
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " G ",
+    "GLG",
+    " A "
+  ],
+  "key": {
+    "G": {
+      "item": "minecraft:gold_nugget"
+    },
+    "L": {
+      "item": "minecraft:glowstone"
+    },
+    "A": {
+      "item": "aetherius:aether_shard"
+    }
+  },
+  "result": {
+    "item": "aetherius:rune_lantern",
+    "count": 2
+  }
+}

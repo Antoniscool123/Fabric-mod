@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ALA",
+    "LDL",
+    "ALA"
+  ],
+  "key": {
+    "A": {
+      "item": "aetherius:aether_shard"
+    },
+    "L": {
+      "item": "minecraft:lapis_block"
+    },
+    "D": {
+      "item": "minecraft:deepslate"
+    }
+  },
+  "result": {
+    "item": "aetherius:aether_forge",
+    "count": 1
+  }
+}

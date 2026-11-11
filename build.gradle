@@ -1,0 +1,270 @@
+// =====================================================================
+//  Aetherius: Echoes of the Shattered Sky
+//  Fabric Loom build script - Minecraft 1.20.1
+// =====================================================================
+plugins {
+    id 'fabric-loom' version '1.10.5'
+    id 'maven-publish'
+}
+
+version = project.mod_version
+group = project.maven_group
+
+base {
+    archivesName = project.archives_base_name
+}
+
+repositories {
+    maven { url = 'https://maven.fabricmc.net/' }
+    mavenCentral()
+    // GeckoLib: animated entity models (Nox'Thal). Restricted to GeckoLib's own group so this
+    // repository can never serve a Minecraft, mapping or Fabric API artifact by accident.
+    exclusiveContent {
+        forRepository {
+            maven {
+                name = 'GeckoLib'
+                url = 'https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/'
+            }
+        }
+        filter { includeGroup 'software.bernie.geckolib' }
+    }
+    // TerraBlender is only needed for the optional Starlit Meadows biome injection.
+    maven { url = 'https://maven.minecraftforge.net/' }
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+
+    // Animation engine for Nox'Thal. A hard dependency: the boss entity implements
+    // GeoAnimatable, so the mod cannot load without it (declared in fabric.mod.json).
+    // transitive = false: GeckoLib's POM also lists fabric-api 0.92.6 + loader as runtime deps;
+    // we pin our own versions and GeckoLib ships mclib as a jar-in-jar.
+    modImplementation("software.bernie.geckolib:geckolib-fabric-1.20.1:${project.geckolib_version}") {
+        transitive = false
+    }
+
+    // Optional worldgen integration (compat/AetheriusTerraBlender).
+    // Compile-only, NOT modImplementation: the classes are loaded through the "terrablender"
+    // entrypoint, so the mod builds and runs with or without TerraBlender installed.
+    modCompileOnly "com.github.glitchfiend:TerraBlender-fabric:${project.terrablender_version}"
+}
+
+processResources {
+    inputs.property 'version', project.version
+    filesMatching('fabric.mod.json') {
+        expand 'version': project.version
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    it.options.release = 17
+    it.options.encoding = 'UTF-8'
+    // Report every error in one CI round instead of the default 100.
+    it.options.compilerArgs += ['-Xmaxerrs', '500']
+}
+
+java {
+    withSourcesJar()
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+jar {
+    from('LICENSE') { rename { "${it}_${project.archives_base_name}" } }
+}
+
+// ---------------------------------------------------------------------------
+//  API probe: verifies that the symbols the mod imports actually exist on the
+//  Minecraft/Fabric compile classpath. Used by CI (`.github/workflows/build.yml`)
+//  so package mismatches can be diagnosed without a local toolchain.
+//  Run with: gradle probeApi
+// ---------------------------------------------------------------------------
+tasks.register('probeApi') {
+    group = 'verification'
+    description = 'Prints which Minecraft/Fabric classes are present on the compile classpath.'
+    doLast {
+        def names = [
+                'net.minecraft.util.Mth',
+                'net.minecraft.util.math.Mth',
+                'net.minecraft.client.model.EntityModel',
+                'net.minecraft.client.model.Model',
+                'net.minecraft.client.model.ModelPart',
+                'net.minecraft.client.render.entity.model.EntityModelLayer',
+                'net.minecraft.registry.entry.RegistryEntry',
+                'net.minecraft.registry.RegistryEntry',
+                'net.minecraft.registry.tag.DamageTypeTags',
+                'net.minecraft.entity.damage.DamageTypeTags',
+                'net.minecraft.world.PersistentState',
+                'net.minecraft.entity.boss.ServerBossBar',
+                'net.minecraft.entity.boss.BossBar',
+                'net.minecraft.world.explosion.Explosion',
+                'net.minecraft.world.World',
+                'net.minecraft.client.particle.SpriteProvider',
+                'net.minecraft.client.particle.SpriteBillboardParticle',
+                'net.minecraft.client.particle.ParticleFactory',
+                'net.minecraft.entity.ai.goal.RevengeGoal',
+                'net.minecraft.client.gui.widget.ButtonWidget',
+                'net.minecraft.client.gui.DrawContext',
+                'net.minecraft.client.option.KeyBinding',
+                'net.minecraft.client.util.InputUtil',
+                'net.minecraft.item.ArmorItem',
+                'net.minecraft.structure.rule.BlockMatchRuleTest',
+                'net.minecraft.world.gen.feature.OreFeatureConfig',
+                'net.minecraft.world.gen.placementmodifier.HeightRangePlacementModifier',
+                'net.minecraft.registry.tag.BlockTags',
+                'net.minecraft.util.math.random.Random',
+                'com.aetherius.util.Aeth'
+        ]
+        def urls = sourceSets.main.compileClasspath.files.collect { it.toURI().toURL() } as URL[]
+        def loader = new URLClassLoader(urls, (ClassLoader) null)
+        names.each { n ->
+            try {
+                loader.loadClass(n)
+                println "OK   ${n}"
+            } catch (Throwable ignored) {
+                println "MISS ${n}"
+            }
+        }
+        ['net.minecraft.world.PersistentState', 'net.minecraft.entity.boss.BossBar',
+         'net.minecraft.world.explosion.Explosion', 'net.minecraft.entity.Entity'].each { n ->
+            try {
+                def c = loader.loadClass(n)
+                println "NESTED ${n}: " + c.declaredClasses.collect { it.simpleName }.sort()
+            } catch (Throwable ignored) {
+                println "NESTED ${n}: unavailable"
+            }
+        }
+        // Candidate-name probing for classes whose Yarn name is uncertain in 1.20.1.
+        ['net.minecraft.util.math.MathHelper', 'net.minecraft.util.MathHelper',
+         'net.minecraft.util.math.Mth', 'net.minecraft.util.Mth',
+         'net.minecraft.client.model.EntityModel', 'net.minecraft.client.model.Model',
+         'net.minecraft.world.World\$ExplosionSourceType',
+         'net.minecraft.world.explosion.Explosion\$DestructionType',
+         'net.minecraft.world.PersistentStateManager',
+         'net.minecraft.client.model.Model\$1'].each { n ->
+            try {
+                loader.loadClass(n.replace('\\\$', '\$'))
+                println "CAND OK   ${n}"
+            } catch (Throwable ignored) {
+                println "CAND MISS ${n}"
+            }
+        }
+        // Signature dump for the classes that need exact API shapes.
+        ['net.minecraft.world.PersistentStateManager', 'net.minecraft.client.model.Model',
+         'net.minecraft.entity.boss.BossBar', 'net.minecraft.world.World'].each { n ->
+            try {
+                def c = loader.loadClass(n)
+                println "SIG === ${n}"
+                c.declaredConstructors.each { ctor -> println "  CTOR ${ctor}" }
+                c.declaredMethods.findAll { m ->
+                    m.toString().matches('.*(getOrCreate|createExplosion|setColor|setName|setDarkenSky|setThickenFog|darkenSky|thickenFog).*')
+                }.each { m -> println "  METHOD ${m}" }
+                c.declaredFields.findAll { f -> f.name.toLowerCase().contains('explosion') }
+                    .each { f -> println "  FIELD ${f}" }
+            } catch (Throwable t) {
+                println "SIG ${n}: unavailable (${t.class.simpleName})"
+            }
+        }
+        // Which jar holds Minecraft, and what does net.minecraft.client.model contain?
+        sourceSets.main.compileClasspath.files.findAll { it.name.contains('minecraft') || it.name.contains('mapped') }
+                .each { println "CP-JAR ${it.name}" }
+        sourceSets.main.compileClasspath.files.each { f ->
+            if (!f.name.endsWith('.jar')) {
+                return
+            }
+            def zf = null
+            try {
+                zf = new java.util.zip.ZipFile(f)
+                def modelHits = zf.entries().findAll { e ->
+                    e.name.startsWith('net/minecraft/client/model/') && e.name.endsWith('.class')
+                }.collect { it.name }
+                if (!modelHits.isEmpty()) {
+                    println "MODEL-PKG ${f.name}: " + modelHits.take(60).join(', ')
+                }
+                def entityModelHits = zf.entries().findAll { e ->
+                    e.name.endsWith('EntityModel.class') || e.name.contains('EntityModel\$')
+                }.collect { it.name }
+                if (!entityModelHits.isEmpty()) {
+                    println "ENTITYMODEL: " + entityModelHits.take(20).join(', ')
+                }
+                def renderModelHits = zf.entries().findAll { e ->
+                    e.name.startsWith('net/minecraft/client/render/entity/model/') && e.name.endsWith('.class')
+                }.collect { it.name }
+                if (!renderModelHits.isEmpty()) {
+                    println "RENDER-MODEL-PKG: " + renderModelHits.take(40).join(', ')
+                }
+                def ps = zf.entries().findAll { e ->
+                    e.name == 'net/minecraft/world/PersistentState.class' ||
+                            e.name == 'net/minecraft/world/PersistentStateManager.class'
+                }.collect { it.name }
+                if (!ps.isEmpty()) {
+                    println "PS-IN ${f.name}"
+                }
+            } catch (Throwable ignored) {
+            } finally {
+                if (zf != null) {
+                    zf.close()
+                }
+            }
+        }
+        try {
+            def ent = loader.loadClass('net.minecraft.entity.Entity')
+            println 'ENTITY gravity methods: ' + ent.declaredMethods.findAll { m ->
+                m.name.toLowerCase().contains('gravity') || m.name == 'travel'
+            }.collect { "${it.name}(${it.parameterTypes*.simpleName.join(',')})->${it.returnType.simpleName}" }
+        } catch (Throwable t) {
+            println 'ENTITY gravity methods: unavailable'
+        }
+        try {
+            def cg = loader.loadClass('net.minecraft.world.gen.chunk.ChunkGenerator')
+            println 'ABSTRACT ChunkGenerator:'
+            cg.declaredMethods.findAll { m -> java.lang.reflect.Modifier.isAbstract(m.modifiers) }
+                    .each { m -> println "  A ${m.returnType.name} ${m.name}(${m.parameterTypes*.name.join(',')})" }
+        } catch (Throwable t) {
+            println 'ABSTRACT ChunkGenerator: unavailable'
+        }
+        ['net.minecraft.world.PersistentState', 'net.minecraft.world.PersistentStateManager',
+         'net.minecraft.world.World'].each { n ->
+            try {
+                def c = loader.loadClass(n)
+                println "API === ${n}"
+                c.declaredMethods.findAll { m ->
+                    java.lang.reflect.Modifier.isPublic(m.modifiers)
+                }.each { m -> println "  M ${m.name}(${m.parameterTypes*.simpleName.join(',')}) -> ${m.returnType.simpleName}" }
+            } catch (Throwable t) {
+                println "API ${n}: unavailable"
+            }
+        }
+        ['net.minecraft.client.render.entity.model.EntityModel',
+         'net.minecraft.client.model.Model'].each { n ->
+            try {
+                def c = loader.loadClass(n)
+                println "MODELCLASS ${n} abstract=${java.lang.reflect.Modifier.isAbstract(c.modifiers)} supers=${c.superclass?.name}"
+                c.declaredConstructors.each { ctor -> println "  MCTOR ${ctor}" }
+                c.declaredMethods.findAll { m -> !m.synthetic && m.name.length() > 2 }
+                        .take(12).each { m -> println "  MM ${m}" }
+            } catch (Throwable t) {
+                println "MODELCLASS ${n}: MISSING"
+            }
+        }
+        try {
+            def model = loader.loadClass('net.minecraft.client.model.Model')
+            println "MODEL abstract=${java.lang.reflect.Modifier.isAbstract(model.modifiers)} "
+                    + "supers=${model.superclass?.name}"
+        } catch (Throwable ignored) {
+            println 'MODEL unavailable'
+        }
+    }
+}
+
+// Diagnostic helper used by CI to inspect the exact compile classpath.
+tasks.register('printCompileClasspath') {
+    doLast {
+        println("CPSTART")
+        println(configurations.compileClasspath.asPath)
+        println("CPEND")
+    }
+}

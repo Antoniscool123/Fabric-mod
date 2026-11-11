@@ -1,0 +1,14 @@
+gradle exit: 1
+
+--- errors ---
+8:/home/runner/work/Fabric-mod/Fabric-mod/src/main/java/com/aetherius/mixin/EntityGravityMixin.java:29: warning: Unable to determine descriptor for @Inject target method
+11:/home/runner/work/Fabric-mod/Fabric-mod/src/main/java/com/aetherius/entity/NoxThalEntity.java:742: error: cannot find symbol
+16:/home/runner/work/Fabric-mod/Fabric-mod/src/main/java/com/aetherius/dimension/ShatteredSkyChunkGenerator.java:53: error: ShatteredSkyChunkGenerator is not abstract and does not override abstract method getDebugHudText(List<String>,NoiseConfig,BlockPos) in ChunkGenerator
+28:FAILURE: Build failed with an exception.
+33:  /home/runner/work/Fabric-mod/Fabric-mod/src/main/java/com/aetherius/mixin/EntityGravityMixin.java:29: warning: Unable to determine descriptor for @Inject target method
+37:  /home/runner/work/Fabric-mod/Fabric-mod/src/main/java/com/aetherius/dimension/ShatteredSkyChunkGenerator.java:53: error: ShatteredSkyChunkGenerator is not abstract and does not override abstract method getDebugHudText(List<String>,NoiseConfig,BlockPos) in ChunkGenerator
+41:  /home/runner/work/Fabric-mod/Fabric-mod/src/main/java/com/aetherius/entity/NoxThalEntity.java:742: error: cannot find symbol
+87:Caused by: org.gradle.api.internal.tasks.compile.CompilationFailedException: Compilation failed; see the compiler output below.
+88:/home/runner/work/Fabric-mod/Fabric-mod/src/main/java/com/aetherius/mixin/EntityGravityMixin.java:29: warning: Unable to determine descriptor for @Inject target method
+92:/home/runner/work/Fabric-mod/Fabric-mod/src/main/java/com/aetherius/dimension/ShatteredSkyChunkGenerator.java:53: error: ShatteredSkyChunkGenerator is not abstract and does not override abstract method getDebugHudText(List<String>,NoiseConfig,BlockPos) in ChunkGenerator
+96:/home/runner/work/Fabric-mod/Fabric-mod/src/main/java/com/aetherius/entity/NoxThalEntity.java:742: error: cannot find symbol
