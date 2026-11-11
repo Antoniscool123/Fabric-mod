@@ -44,14 +44,34 @@ jobs:
           python3 tools/check_api.py
 
       - name: Build with Loom
-        run: gradle build --no-daemon --stacktrace
+        run: |
+          set +e
+          gradle build --no-daemon --stacktrace 2>&1 | tee build.log
+          status=${PIPESTATUS[0]}
+          echo "GRADLE_EXIT=$status" >> "$GITHUB_ENV"
+          exit 0
+
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: build.log
+          if-no-files-found: warn
 
       - name: Upload jar
+        if: env.GRADLE_EXIT == '0'
         uses: actions/upload-artifact@v4
         with:
           name: aetherius-jar
           path: build/libs/*.jar
           if-no-files-found: error
+
+      - name: Fail on compile errors
+        if: env.GRADLE_EXIT != '0'
+        run: |
+          echo "gradle exited with $GRADLE_EXIT"
+          exit 1
 
       - name: Attach jar to release
         if: startsWith(github.ref, 'refs/tags/v')
