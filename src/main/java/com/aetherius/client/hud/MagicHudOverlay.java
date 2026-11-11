@@ -10,7 +10,7 @@ import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.math.Mth;
+import net.minecraft.util.Mth;
 
 /**
  * Custom HUD: the Mana and Astral Tension bars.

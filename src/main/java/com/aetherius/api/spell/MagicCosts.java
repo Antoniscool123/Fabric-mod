@@ -1,7 +1,7 @@
 package com.aetherius.api.spell;
 
 import com.aetherius.api.magic.Rune;
-import net.minecraft.util.math.Mth;
+import net.minecraft.util.Mth;
 
 /**
  * Cost table for a rune sequence.

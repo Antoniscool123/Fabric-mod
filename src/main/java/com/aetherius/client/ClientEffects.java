@@ -1,7 +1,7 @@
 package com.aetherius.client;
 
 import com.aetherius.network.BossEventS2CPacket;
-import net.minecraft.util.math.Mth;
+import net.minecraft.util.Mth;
 
 import java.util.HashMap;
 import java.util.Map;

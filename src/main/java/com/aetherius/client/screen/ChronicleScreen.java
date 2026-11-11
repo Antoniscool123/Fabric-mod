@@ -14,7 +14,7 @@ import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
-import net.minecraft.util.math.Mth;
+import net.minecraft.util.Mth;
 
 import java.util.ArrayList;
 import java.util.List;

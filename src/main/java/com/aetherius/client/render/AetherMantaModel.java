@@ -10,7 +10,7 @@ import net.minecraft.client.model.ModelPartData;
 import net.minecraft.client.model.ModelTransform;
 import net.minecraft.client.model.TexturedModelData;
 import net.minecraft.client.render.entity.model.EntityModelLayer;
-import net.minecraft.util.math.Mth;
+import net.minecraft.util.Mth;
 
 /**
  * Aether-Manta: a flat diamond body with two long ray wings and a whip tail. The wing roll is

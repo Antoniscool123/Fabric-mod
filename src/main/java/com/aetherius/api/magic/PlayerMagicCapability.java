@@ -28,7 +28,7 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Mth;
+import net.minecraft.util.Mth;
 
 import java.util.ArrayDeque;
 import java.util.Deque;

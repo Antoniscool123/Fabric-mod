@@ -53,6 +53,24 @@ jobs:
           echo "GRADLE_EXIT=$status" >> "$GITHUB_ENV"
           exit 0
 
+      - name: Dump API symbol locations
+        if: always()
+        run: |
+          JAR=$(find ~/.gradle/caches/fabric-loom -name "*mapped*.jar" 2>/dev/null | head -1)
+          echo "mapped jar: $JAR" > symbols.txt
+          if [ -n "$JAR" ]; then
+            for n in Mth RegistryEntry DamageTypeTags EntityModel PersistentState SpriteProvider PlayerLookup Enchantments ExplosionSourceType RegistryEntryList ItemCooldownManager BlockEntityType; do
+              echo "== $n" >> symbols.txt
+              unzip -l "$JAR" | grep -E "(^|/)$n(\\$[A-Za-z]+)?\\.class" | awk '{print $4}' | head -6 >> symbols.txt
+            done
+            echo "== PersistentState members" >> symbols.txt
+            javap -classpath "$JAR" net.minecraft.world.PersistentState 2>&1 | head -25 >> symbols.txt
+            echo "== EntityModel check" >> symbols.txt
+            javap -classpath "$JAR" net.minecraft.client.model.EntityModel 2>&1 | head -5 >> symbols.txt
+            javap -classpath "$JAR" net.minecraft.client.model.Model 2>&1 | head -8 >> symbols.txt
+          fi
+          cat symbols.txt
+
       - name: Report compile errors
         if: env.GRADLE_EXIT != '0'
         uses: actions/github-script@v7
@@ -71,8 +89,11 @@ jobs:
                 out.push(lines[i]);
               }
             }
+            let sym = '';
+            try { sym = fs.readFileSync('symbols.txt', 'utf8'); } catch (e) { sym = 'no symbols.txt'; }
             let body = `### CI compile report\n\nGradle exit code: \`${{ env.GRADLE_EXIT }}\`\n\n`
                      + '```\n' + (out.length ? out.join('\n') : log.slice(-4000)) + '\n```';
+            body += '\n\n### API symbol locations\n\n```\n' + sym.slice(0, 12000) + '\n```';
             if (body.length > 60000) body = body.slice(0, 60000) + '\n...truncated';
             const issue = context.issue.number || 1;
             await github.rest.issues.createComment({
