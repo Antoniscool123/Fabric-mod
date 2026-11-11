@@ -323,6 +323,7 @@ The asset pipeline is pure Python (no Pillow, no external downloads):
 | `tools/check_chronicle.py` | quest flags, objective classes, rune constants resolve |
 | `tools/check_lang.py` | translation keys used in Java exist in `en_us.json` |
 | `tools/check_data.py` | biome/dimension/model/recipe JSON shapes — encodes the bugs found at first launch |
+| `docs/img/texture_sheet.png` | every generated texture at 5x, in one contact sheet — the fastest way to spot a texture that reads as mud |
 | `tools/preview_model.py` | rasterises the GeckoLib `nox_thal.geo.json` (and any of its animations) to `docs/img/nox_thal_model.png` — catches broken pivots without launching the game |
 
 Run them all:
