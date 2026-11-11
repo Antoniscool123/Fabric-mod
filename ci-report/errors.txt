@@ -1,4 +1,0 @@
-gradle exit: 0
-
---- errors ---
-8:/home/runner/work/Fabric-mod/Fabric-mod/src/main/java/com/aetherius/mixin/EntityGravityMixin.java:29: warning: Unable to determine descriptor for @Inject target method

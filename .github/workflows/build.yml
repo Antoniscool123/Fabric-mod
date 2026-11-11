@@ -133,7 +133,7 @@ jobs:
             });
 
       - name: Publish diagnostics to the branch (readable without CI log access)
-        if: always()
+        if: env.GRADLE_EXIT != '0'
         run: |
           mkdir -p ci-report
           { echo "gradle exit: $GRADLE_EXIT"; echo; echo "--- errors ---";
