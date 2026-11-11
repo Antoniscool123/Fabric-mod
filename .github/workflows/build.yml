@@ -75,8 +75,8 @@ jobs:
           fi
           cat symbols.txt
 
-      - name: Report compile errors
-        if: env.GRADLE_EXIT != '0'
+      - name: Report failures
+        if: failure()
         uses: actions/github-script@v7
         with:
           script: |
@@ -94,8 +94,9 @@ jobs:
               }
             }
             let sym = '';
-            for (const f of ['probe.txt', 'symbols.txt']) {
-              try { sym += fs.readFileSync(f, 'utf8'); } catch (e) { sym += f + ': missing\n'; }
+            for (const f of ['jar-check.txt', 'probe.txt', 'symbols.txt']) {
+              try { sym += '--- ' + f + ' ---\n' + fs.readFileSync(f, 'utf8'); }
+              catch (e) { sym += f + ': missing\n'; }
             }
             let body = `### CI compile report\n\nGradle exit code: \`${{ env.GRADLE_EXIT }}\`\n\n`
                      + '```\n' + (out.length ? out.join('\n') : log.slice(-4000)) + '\n```';
@@ -119,6 +120,7 @@ jobs:
         if: env.GRADLE_EXIT == '0'
         run: |
           set -e
+          exec > >(tee jar-check.txt) 2>&1
           JAR=$(ls build/libs/aetherius-*.jar | grep -v sources | head -1)
           echo "checking $JAR"
           unzip -l "$JAR" > jar-contents.txt

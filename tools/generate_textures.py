@@ -485,7 +485,8 @@ def main():
               particle_sprite((120, 80, 180), 75))
 
     # ---- Mod icon ----
-    write_png(os.path.join(ROOT, "icon.png"), 128, 128, icon_texture())
+    # fabric.mod.json points at assets/aetherius/icon.png, one level above textures/.
+    write_png(os.path.join(ROOT, "..", "icon.png"), 128, 128, icon_texture())
 
     print("textures written to", ROOT)
 
