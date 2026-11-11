@@ -4,6 +4,45 @@ All notable changes to Aetherius: Echoes of the Shattered Sky.
 The mod is in alpha: versions are `1.0.0-alpha.N`, each one a playable checkpoint rather than a
 finished product. Jars are attached to the matching GitHub release.
 
+## [1.0.0-alpha.11] — 2026-11-11
+
+### Changed — the Shattered Sky is islands again, the overworld stays vanilla
+
+alpha.9 made the dimension a continuous landscape so that "the player never falls". That fixed the
+fall, but it also smoothed away the thing the dimension is named after. This release separates the
+two concerns properly:
+
+| Before (alpha.9/alpha.10) | Now (alpha.11) |
+|---|---|
+| One continuous terrain sheet, sea level 76, water and beaches | **Floating islands in an endless void**, like the End: separate landmasses, each at its own altitude, tapered undersides, bedrock underneath, nothing in between |
+| Arrival plateau at the origin | A dedicated arrival island at the origin, radius 54, surface ≈ y 92, so a portal still cannot drop you into the void |
+| Biomes picked by noise height + blight everywhere | Same three biomes, but the height rule now follows the island surface (`≥ 96` = highlands), and void columns inherit the meadows biome instead of picking one from noise |
+| Ores on continuous ground | Same ore roll inside island stone (star vein high, blood ore low) |
+
+The teleporter was not touched: `SkyRiftTeleporter` already asks the generator for a surface
+column (`surfaceHeight`) and for the nearest island centre when the aimed column is empty sky, so
+"It generates islands" and "you always arrive on one" are the same code path.
+
+### Added — the two mod biomes also generate in the overworld (optional TerraBlender)
+
+`starlit_meadows` and `blighted_barrens` can now appear in normal overworld terrain, provided
+**TerraBlender** is installed (optional; the mod runs without it). The overworld's terrain shape
+and its vanilla biomes are untouched — TerraBlender only adds two parameter windows at low weight:
+
+| Region | Climate window | Biome |
+|---|---|---|
+| `aetherius:overworld_meadows` (weight 2) | cool→neutral, wet→humid, inland, low erosion, surface | `aetherius:starlit_meadows` |
+| `aetherius:overworld_barrens` (weight 1) | hot, arid→dry, inland→far inland, high erosion, surface | `aetherius:blighted_barrens` |
+
+Implementation notes:
+
+- `compat/AetheriusTerraBlender` implements `TerraBlenderApi` and is wired through a
+  `"terrablender"` entrypoint, so no class outside `compat/` touches a TerraBlender type — the
+  library is `modCompileOnly` in `build.gradle` and stays a soft dependency at runtime.
+- Weights are intentionally small (2/1 against vanilla's default of 1 per region overlay), so the
+  mod biomes are a find, not a replacement.
+- The Shattered Sky keeps its own three biomes; those are dimension-only and are not injected.
+
 ## [1.0.0-alpha.10] — 2026-11-11
 
 ### Changed — ores and grass are vanilla-shaped now

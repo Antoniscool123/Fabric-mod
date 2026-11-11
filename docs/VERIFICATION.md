@@ -169,6 +169,26 @@ GeckoLib compiles, but nothing has *run* yet:
 - The `attack` triggerable animation is wired to the cosmic-breath attack; whether it fires and
   blends back into flight was not observed.
 
+## 0g. `1.0.0-alpha.11` — islands restored, overworld injected (optional)
+
+Two changes, one of them a deliberate revert of alpha.9.
+
+| Change | Risk | What CI proves | What only a live run can prove |
+|---|---|---|---|
+| `ShatteredSkyChunkGenerator` rewritten as a floating-island generator | **high** — it is the dimension's whole terrain | compiles; `islandAt`/`surfaceHeight`/`nearestIslandCentre` still exist, which is what `SkyRiftTeleporter` calls; `getDebugHudText` retained; brace/package/reference checks pass | that islands generate at sane altitudes, that the origin island is landable, that you can walk off an edge and fall (intended) without the client dying |
+| TerraBlender overworld injection (optional) | medium | compiles against `TerraBlender-fabric 1.20.1-3.0.1.11`; every class touched is inside `compat/`; the jar's `fabric.mod.json` lists the `terrablender` entrypoint and `suggests` TerraBlender rather than depending on it | that the biomes actually appear in a **new** overworld, and that the game still loads with TerraBlender **absent** |
+
+Design points that were checked before compiling rather than after:
+
+- **Signature drift.** `Region#addBiomes` takes a `Consumer<Pair<MultiNoiseUtil.NoiseHypercube, RegistryKey<Biome>>>`
+  in Yarn 1.20.1 (mojmap: `Climate.ParameterPoint`). That type name was taken from the Yarn 1.20.1
+  javadoc, not guessed, because a wrong nested-class name is a hard compile error.
+- **Soft dependency.** No class outside `compat/` mentions `terrablender.*`; the dependency is
+  `modCompileOnly`, so the produced jar contains no TerraBlender classes and no code path that
+  requires them unless the `terrablender` entrypoint is invoked.
+- **Biome source untouched.** The Shattered Sky keeps its own three-biome source; the overworld
+  injection is additive and does not alter `aetherius:dimension/shattered_sky.json`.
+
 ## 0f. `1.0.0-alpha.9` — four changes, one of them risky
 
 | Change | Risk | What CI proves | What only a live run can prove |

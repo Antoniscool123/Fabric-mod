@@ -6,8 +6,8 @@
 
 A large, story-driven magic mod for **Minecraft Java Edition 1.20.1 · Fabric**.
 Three acts, five schools of magic, a rune-combinatoric spell system, a chunk-rotting
-Celestial Blight, multi-block ritual structures, a low-gravity island dimension and a
-three-phase dragon that eats the sky.
+Celestial Blight, multi-block ritual structures, a low-gravity dimension of floating End-style
+islands and a three-phase dragon that eats the sky.
 
 The whole mod is written as a **framework**: systems are data-driven, extended by
 registration rather than by patching, and every piece of content is reachable from Java
@@ -24,8 +24,8 @@ Assets:   48 generated textures · 65 block/item models · 45 data files
 
 ## Download & play
 
-1. Download **[aetherius-1.0.0-alpha.10.jar](https://github.com/Antoniscool123/Fabric-mod/releases/download/v1.0.0-alpha.10/aetherius-1.0.0-alpha.10.jar)**
-   (plus [`SHA256SUMS.txt`](https://github.com/Antoniscool123/Fabric-mod/releases/download/v1.0.0-alpha.10/SHA256SUMS.txt)).
+1. Download **[aetherius-1.0.0-alpha.11.jar](https://github.com/Antoniscool123/Fabric-mod/releases/download/v1.0.0-alpha.11/aetherius-1.0.0-alpha.11.jar)**
+   (plus [`SHA256SUMS.txt`](https://github.com/Antoniscool123/Fabric-mod/releases/download/v1.0.0-alpha.11/SHA256SUMS.txt)).
 2. Install **Fabric Loader 0.15.11+** for Minecraft **1.20.1**.
 3. Drop the jar, [Fabric API 0.92.2+1.20.1](https://modrinth.com/mod/fabric-api) **and**
    [GeckoLib 4.8.4+1.20.1](https://modrinth.com/mod/geckolib/versions?g=1.20.1&loader=fabric)
@@ -37,6 +37,10 @@ Assets:   48 generated textures · 65 block/item models · 45 data files
    > `animations/entity/nox_thal.animation.json`), so the game refuses to load without it.
    > The exact file that was used for testing is
    > `geckolib-fabric-1.20.1-4.8.4.jar`; any 4.8.x for 1.20.1 works (`depends` says `>=4.8.0`).
+   >
+   > **TerraBlender is optional.** Add [TerraBlender](https://modrinth.com/mod/terrablender)
+   > (`1.20.1-3.0.1.11`) if you want Starlit Meadows and Blighted Barrens to also generate in the
+   > overworld; the overworld's terrain and vanilla biomes are unchanged either way.
 
 The jar is produced by GitHub Actions (`.github/workflows/build.yml`) on every tag:
 JDK 17 → Gradle 8.14 → Loom 1.10.5 → `compileJava` + `build` → attached to the release.
@@ -70,6 +74,7 @@ additions — nothing breaks if you skip them, and none of them are required for
 
 | Mod | Why you might want it |
 |---|---|
+| [TerraBlender](https://modrinth.com/mod/terrablender) | **the only way to meet Starlit Meadows and Blighted Barrens in the overworld.** Without it those biomes exist only in the Shattered Sky (and the blight system still converts terrain in place) |
 | [Mod Menu](https://modrinth.com/mod/modmenu) | shows the mod entry, config screen slot |
 | [Fabric Language Kotlin](https://modrinth.com/mod/fabric-language-kotlin) | only if you add Kotlin-based helper mods |
 | [Cloth Config API](https://modrinth.com/mod/cloth-config) | future client options screen |
@@ -260,7 +265,7 @@ src/main/java/com/aetherius/
 ├── block/ block/entity/        blocks and five block entities
 ├── client/                     HUD, boss bar, Chronicle screen, renderers, particles
 ├── command/                    /aetherius command tree (travel, admin, read-only)
-├── compat/                     TerraBlender detection
+├── compat/                     optional TerraBlender overworld biome injection
 ├── dimension/                  dimension keys, teleporter, chunk generator, storms
 ├── entity/ entity/ai/          base mobs + shared AI goals
 ├── entity/boss/bt/ phase/      behaviour tree and phase state machine
@@ -348,8 +353,9 @@ python3 tools/check_java.py && python3 tools/check_refs.py \
   (`python3 tools/preview_model.py`).
 - No custom audio files: every sound is an alias of a real vanilla `SoundEvents` constant, so
   there is no `sounds.json` and nothing can point at a missing `.ogg`.
-- Biome *injection* into vanilla worldgen needs TerraBlender or a datapack override; the
-  mod's own answer to "where are the Blighted Barrens" is the runtime blight system.
+- Overworld biome *injection* needs TerraBlender (optional, see above): vanilla Fabric has no API
+  for appending to the overworld's climate table. Without TerraBlender the two biomes are
+  dimension-only, and the runtime blight system still converts overworld terrain in place.
 - The Chronicle screen is a custom `Screen` (no `ScreenHandler`), so it is read-mostly by
   design: quest progress is server-authoritative and pushed via packets.
 - Nox'Thal's phase-3 star strikes use vanilla lightning cosmetics plus custom AoE damage;

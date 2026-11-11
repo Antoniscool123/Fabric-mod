@@ -201,27 +201,42 @@ ticked from the server tick event.
 
 - Dimension `aetherius:shattered_sky`: type with `min_y 0`, `height 256`, `fixed_time 15000`,
   ambient light 0.14, `effects: the_end`, no beds/anchors/respawn.
-- `ShatteredSkyChunkGenerator` generates **normal, walkable terrain**: three value-noise
-  octaves (`worldgen/SkyNoise`) give a continental field, hills and detail, with sea level 76,
-  beaches, water and a flat plateau around the origin so portal arrivals always land on ground.
-  Surface blocks come from `ShatteredSkyRegion`, the same helper the biome source uses.
+- `ShatteredSkyChunkGenerator` generates **floating islands in an endless void**. A low-frequency
+  value-noise field (`worldgen/SkyNoise.fbm`, frequency 0.0016, four octaves) thresholded at 0.56
+  decides *where* an island exists; a second, much finer octave pair roughens its surface. Each
+  island carries its own altitude (`58 + fbm(0.0007) * 44`, clamped 24..232), so the field reads as
+  scattered islands at different heights rather than one sheet of terrain — the End's shape, with
+  the mod's palette. Undersides taper (`top - (6 + 34t)`), bottom out in a bedrock layer, and
+  everything outside an island is air: there is no sea, no lake, no ground plane.
+- `islandAt(x, z, seed)` is the single source of truth and is public, because the teleporter needs
+  it: `SkyRiftTeleporter` asks `surfaceHeight(...)` for a safe arrival column and
+  `nearestIslandCentre(...)` when the aimed column is empty sky. Same call, so the generator and
+  the teleporter can never disagree about where ground is.
+- A guaranteed arrival island sits at the origin (`r < 54`, surface ≈ y 92, noise-perturbed), and
+  the spawn platform is written by the generator itself, so a portal can never drop the player into
+  the void.
 - Decoration is hand-placed in `generateFeatures` (oaks in the meadows, celestial pillars as
-  standing stones in the highlands, mana lilies near grass). It only writes inside the chunk
-  being generated, so it can never touch a neighbour that has not been generated yet.
+  standing stones in the highlands, mana lilies near grass). It only writes inside the chunk being
+  generated, so it can never touch a neighbour that has not been generated yet.
 - Biomes are chosen by `ShatteredSkyBiomeSource` (`aetherius:shattered_sky`), a custom
   `BiomeSource` with its own codec that ignores the vanilla climate sampler: the blight noise
-  carves `blighted_barrens`, everything above y 104 is `shattered_sky`, the rest is
-  `starlit_meadows`. Because the terrain uses the same function, a biome always matches the
-  ground under it.
+  carves `blighted_barrens`, islands whose surface sits at or above y 96 are `shattered_sky`, the
+  rest is `starlit_meadows`. Void columns inherit the meadows biome (`NO_SURFACE` guard) rather
+  than picking one from the noise, because the same noise value under every island would flicker.
 - The dimension JSON lists the three biomes in a fixed order - meadow, highland, barrens -
   which is the contract of the biome source's codec.
 - Overworld ores are injected with `BiomeModifications.addFeature` over
   `BiomeSelectors.foundInOverworld()`.
-- Overworld *biome* injection is out of scope for vanilla Fabric — see
-  `compat/TerraBlenderCompat` for the three supported strategies.
+- The overworld itself keeps vanilla terrain and vanilla biome placement. `starlit_meadows` and
+  `blighted_barrens` are added to it through **TerraBlender** (`compat/AetheriusTerraBlender` +
+  `AetheriusOverworldRegion`): two regions claim a climate window each - cool/wet inland for the
+  meadows, hot/arid/eroded inland for the barrens - and TerraBlender merges their parameter points
+  into the overworld source with a low weight, so vanilla biomes still dominate. The integration is
+  compile-only and reaches the game through the `terrablender` entrypoint, so TerraBlender stays an
+  optional dependency: without it the mod runs unchanged and the two biomes exist only in the
+  Shattered Sky.
 
 ---
-
 ## 9. Mixins
 
 | Mixin | Target | Purpose |

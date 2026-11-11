@@ -3,26 +3,17 @@ package com.aetherius.compat;
 import com.aetherius.Aetherius;
 
 /**
- * Optional TerraBlender integration point for injecting <b>Starlit Meadows</b> and
- * <b>Blighted Barrens</b> into the overworld's multi-noise biome source.
+ * Cheap runtime check for TerraBlender, used for log lines and guide text.
  *
- * <p>Fabric has no vanilla-supported way to add a biome to the overworld's noise parameters at
- * runtime. Three supported strategies, in order of preference:</p>
+ * <p>The actual integration lives in {@link AetheriusTerraBlender}, which TerraBlender loads
+ * through the {@code terrablender} entrypoint in {@code fabric.mod.json}; that class registers
+ * {@link AetheriusOverworldRegion}, which adds {@code aetherius:starlit_meadows} and
+ * {@code aetherius:blighted_barrens} to the overworld's multi-noise parameter list.</p>
  *
- * <ol>
- *   <li><b>TerraBlender</b> (recommended): add the dependency in {@code build.gradle}, then
- *       register a {@code Region} whose {@code addBiomes} adds {@code aetherius:starlit_meadows}
- *       and {@code aetherius:blighted_barrens} with weights.</li>
- *   <li><b>Datapack</b>: ship an override of
- *       {@code data/minecraft/worldgen/multi_noise_biome_source_parameter_list/overworld.json}
- *       containing the extra entries. Simple, but conflicts with other worldgen datapacks.</li>
- *   <li><b>Runtime transformation</b>: this mod's own fallback - the blight system converts
- *       terrain texture and mobs in place, so an infected region <i>behaves</i> like Blighted
- *       Barrens without needing a dedicated biome ID.</li>
- * </ol>
- *
- * <p>This class exists so the rest of the codebase never has to reference TerraBlender types
- * directly: call {@link #isAvailable()} before attempting a region registration.</p>
+ * <p>Keeping the entrypoint in a separate class is what makes the dependency optional: nothing
+ * outside {@code compat/} references a {@code terrablender} type, so the mod still loads when the
+ * library is absent. {@link #isAvailable()} answers "is the library on this installation?" for
+ * anything that wants to word a message differently - never as a reason to skip registration.</p>
  */
 public final class TerraBlenderCompat {
 

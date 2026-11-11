@@ -56,11 +56,36 @@ updated.
 
 ## What Aetherius explicitly does *not* need
 
-- **TerraBlender** — no longer suggested. Aetherius ships its own dimension and uses a runtime blight
-  system instead of injecting biomes into vanilla worldgen.
+- **TerraBlender** — *optional, but it changes what you see.* Aetherius ships its own dimension
+  regardless, but `aetherius:starlit_meadows` and `aetherius:blighted_barrens` can only appear in the
+  **overworld** when TerraBlender is installed: Fabric has no API for appending parameter points to
+  the overworld's climate table, and TerraBlender is the established library for exactly that.
+  Aetherius declares it as `modCompileOnly` and loads the integration through a `terrablender`
+  entrypoint, so **nothing breaks without it** — the two biomes are then dimension-only.
 - No resource pack, datapack or shader pack of its own.
 - No `sounds.json`: every sound is an alias of a vanilla `SoundEvents` constant, so no missing `.ogg`
   files and no empty sound events.
+
+## TerraBlender (optional) — overworld biomes
+
+| Item | Value |
+|---|---|
+| Modrinth / CurseForge | [TerraBlender](https://modrinth.com/mod/terrablender) |
+| Version used | `TerraBlender-fabric 1.20.1-3.0.1.11` (`gradle.properties: terrablender_version`) |
+| Aetherius side | `compat/AetheriusTerraBlender` (entrypoint `terrablender`), `compat/AetheriusOverworldRegion` |
+| Gradle scope | `modCompileOnly` — compiled against, **not** bundled, **not** required at runtime |
+| `fabric.mod.json` | listed under `suggests`, not `depends` |
+
+What it adds, exactly two climate windows at low weight:
+
+| Region | Weight | Climate | Biome |
+|---|---|---|---|
+| `aetherius:overworld_meadows` | 2 | cool→neutral, wet→humid, inland, erosion 3–4, surface | `aetherius:starlit_meadows` |
+| `aetherius:overworld_barrens` | 1 | hot, arid→dry, inland→far inland, erosion 5–6, surface | `aetherius:blighted_barrens` |
+
+Overworld terrain generation is untouched: the shapes are vanilla, only the biome (and therefore
+its surface/colour rules) changes inside those windows. Existing worlds keep their generated
+chunks; biomes appear in chunks generated after TerraBlender is installed.
 
 ## If something looks wrong
 
