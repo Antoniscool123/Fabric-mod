@@ -4,6 +4,23 @@ All notable changes to Aetherius: Echoes of the Shattered Sky.
 The mod is in alpha: versions are `1.0.0-alpha.N`, each one a playable checkpoint rather than a
 finished product. Jars are attached to the matching GitHub release.
 
+## [1.0.0-alpha.7] — 2026-11-11
+
+### Fixed — world creation crash (`Failed to load registries`)
+
+alpha.6 shipped two invalid codec shapes, both of which abort registry loading before a world can
+be created:
+
+| Symptom in the log | Cause | Fix |
+|---|---|---|
+| `Failed to parse aetherius:dimension_type/shattered_sky.json` … `Not a JSON object: null` | `monster_spawn_light_level` was a flat `{"type":"uniform","min_inclusive":0,"max_inclusive":7}`; 1.20.1's `IntProvider` codec wants the range nested under `value` | `{"type":"minecraft:uniform","value":{"min_inclusive":0,"max_inclusive":7}}` |
+| `Failed to parse …/biome/*.json` … `Not a JSON object: 1.0` / `1.5` / `0.6` | `spawn_costs` was written as `{"mob": 1.0}`; vanilla's `SpawnCost` is a record, so it must be an object | `{"mob": {"energy_budget": 0.7, "charge": 0.15}}` |
+
+Both are now guarded by `tools/check_data.py`, which validates every `IntProvider` shape, every
+`spawn_costs` entry, spawner categories/weights and `creature_spawn_probability` before compile —
+so this class of bug cannot reach a release again. The alpha.6 shapes were re-injected into the
+datapack to prove the checker catches them.
+
 ## [1.0.0-alpha.6] — 2026-11-11
 
 ### Fixed

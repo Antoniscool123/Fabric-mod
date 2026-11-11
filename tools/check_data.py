@@ -15,6 +15,9 @@ import os
 import re
 import sys
 
+SPAWN_CATEGORIES = {"monster", "creature", "ambient", "axolotls", "underground_water_creature",
+                    "water_creature", "water_ambient", "misc"}
+
 BASE = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 RES = os.path.join(BASE, "src", "main", "resources")
 DATA = os.path.join(RES, "data", "aetherius")
@@ -71,205 +74,130 @@ def check_biome(rel, doc):
         problems.append(f"{rel}: spawners must be an object")
     else:
         for category, entries in spawners.items():
+            if category not in SPAWN_CATEGORIES:
+                problems.append(f"{rel}: unknown spawner category '{category}'")
             if not isinstance(entries, list):
                 problems.append(f"{rel}: spawners.{category} is not a list")
-            for entry in entries:
-                if not isinstance(entry, dict) or "type" not in entry:
-                    problems.append(f"{rel}: spawners.{category} entry lacks 'type'")
-    effects = doc.get("effects")
-    if not isinstance(effects, dict):
-        problems.append(f"{rel}: effects must be an object")
-    else:
-        for key in ("sky_color", "fog_color", "water_color"):
-            if not isinstance(effects.get(key), int):
-                problems.append(f"{rel}: effects.{key} must be an int")
-        mood = effects.get("mood_sound")
-        if mood is not None:
-            for key in ("sound", "tick_delay", "block_search_extent", "offset"):
-                if key not in mood:
-                    problems.append(f"{rel}: effects.mood_sound missing '{key}'")
-    if not isinstance(doc.get("temperature"), (int, float)):
-        problems.append(f"{rel}: temperature must be numeric")
-    if "has_precipitation" not in doc:
-        problems.append(f"{rel}: has_precipitation is required in 1.20.1")
-
-
-def check_dimension_type(rel, doc):
-    required = ["ultrawarm", "natural", "coordinate_scale", "has_skylight", "has_ceiling",
-                "ambient_light", "monster_spawn_light_level", "monster_spawn_block_light_limit",
-                "piglin_safe", "bed_works", "respawn_anchor_works", "has_raids",
-                "logical_height", "min_y", "height", "infiniburn", "effects"]
-    for key in required:
-        if key not in doc:
-            problems.append(f"{rel}: missing required field '{key}'")
-    if isinstance(doc.get("min_y"), int) and doc.get("min_y") % 16:
-        problems.append(f"{rel}: min_y must be a multiple of 16")
-    if isinstance(doc.get("height"), int) and doc.get("height") % 16:
-        problems.append(f"{rel}: height must be a multiple of 16")
-    logical = doc.get("logical_height")
-    height = doc.get("height")
-    if isinstance(logical, int) and isinstance(height, int) and logical > height:
-        problems.append(f"{rel}: logical_height must be <= height")
-    infiniburn = doc.get("infiniburn")
-    if isinstance(infiniburn, str) and not infiniburn.startswith("#"):
-        problems.append(f"{rel}: infiniburn must be a tag id ('#minecraft:...')")
-
-
-def check_dimension(rel, doc):
-    for key in ("type", "generator"):
-        if key not in doc:
-            problems.append(f"{rel}: missing '{key}'")
-    generator = doc.get("generator", {})
-    for key in ("type", "biome_source"):
-        if key not in generator:
-            problems.append(f"{rel}: generator missing '{key}'")
-
-
-def check_placed(rel, doc):
-    if "feature" not in doc or not isinstance(doc.get("placement"), list):
-        problems.append(f"{rel}: placed feature needs 'feature' and a 'placement' list")
-        return
-    for index, modifier in enumerate(doc["placement"]):
-        if not isinstance(modifier, dict) or "type" not in modifier:
-            problems.append(f"{rel}: placement[{index}] lacks 'type'")
-
-
-def check_configured(rel, doc):
-    if "type" not in doc or "config" not in doc:
-        problems.append(f"{rel}: configured feature needs 'type' and 'config'")
-
-
-def check_model(rel, doc):
-    parent = doc.get("parent")
-    if parent is not None and not re.fullmatch(r"[a-z0-9_.-]+:[a-z0-9_/.-]+", parent):
-        problems.append(f"{rel}: invalid parent {parent!r}")
-    for key, value in (doc.get("textures") or {}).items():
-        if not isinstance(value, str):
-            continue
-        if value.startswith("#"):
-            continue
-        if not re.fullmatch(r"[a-z0-9_.-]+:[a-z0-9_/.-]+", value):
-            problems.append(f"{rel}: invalid texture reference {key}={value!r}")
-
-
-def check_biome(rel, doc):
-    carvers = doc.get("carvers")
-    if not isinstance(carvers, dict):
-        problems.append(f"{rel}: carvers must be an object, got {type(carvers).__name__} "
-                        "(1.20.1: {\"air\": []})")
-    features = doc.get("features")
-    if not isinstance(features, list) or len(features) != 11:
-        problems.append(f"{rel}: features must be 11 generation-step lists, got "
-                        f"{len(features) if isinstance(features, list) else type(features).__name__}")
-    if isinstance(features, list):
-        for index, step in enumerate(features):
-            if not isinstance(step, list):
-                problems.append(f"{rel}: features[{index}] is not a list")
-    spawners = doc.get("spawners")
-    if not isinstance(spawners, dict):
-        problems.append(f"{rel}: spawners must be an object")
-    else:
-        for category, entries in spawners.items():
-            if not isinstance(entries, list):
-                problems.append(f"{rel}: spawners.{category} is not a list")
-            for entry in entries:
-                if not isinstance(entry, dict) or "type" not in entry:
-                    problems.append(f"{rel}: spawners.{category} entry lacks 'type'")
-    effects = doc.get("effects")
-    if not isinstance(effects, dict):
-        problems.append(f"{rel}: effects must be an object")
-    else:
-        for key in ("sky_color", "fog_color", "water_color"):
-            if not isinstance(effects.get(key), int):
-                problems.append(f"{rel}: effects.{key} must be an int")
-        mood = effects.get("mood_sound")
-        if mood is not None:
-            for key in ("sound", "tick_delay", "block_search_extent", "offset"):
-                if key not in mood:
-                    problems.append(f"{rel}: effects.mood_sound missing '{key}'")
-    if not isinstance(doc.get("temperature"), (int, float)):
-        problems.append(f"{rel}: temperature must be numeric")
-    if "has_precipitation" not in doc:
-        problems.append(f"{rel}: has_precipitation is required in 1.20.1")
-
-
-def check_dimension_type(rel, doc):
-    required = ["ultrawarm", "natural", "coordinate_scale", "has_skylight", "has_ceiling",
-                "ambient_light", "monster_spawn_light_level", "monster_spawn_block_light_limit",
-                "piglin_safe", "bed_works", "respawn_anchor_works", "has_raids",
-                "logical_height", "min_y", "height", "infiniburn", "effects"]
-    for key in required:
-        if key not in doc:
-            problems.append(f"{rel}: missing required field '{key}'")
-    if isinstance(doc.get("min_y"), int) and doc.get("min_y") % 16:
-        problems.append(f"{rel}: min_y must be a multiple of 16")
-    if isinstance(doc.get("height"), int) and doc.get("height") % 16:
-        problems.append(f"{rel}: height must be a multiple of 16")
-    logical = doc.get("logical_height")
-    height = doc.get("height")
-    if isinstance(logical, int) and isinstance(height, int) and logical > height:
-        problems.append(f"{rel}: logical_height must be <= height")
-    infiniburn = doc.get("infiniburn")
-    if isinstance(infiniburn, str) and not infiniburn.startswith("#"):
-        problems.append(f"{rel}: infiniburn must be a tag id ('#minecraft:...')")
-
-
-def check_dimension(rel, doc):
-    for key in ("type", "generator"):
-        if key not in doc:
-            problems.append(f"{rel}: missing '{key}'")
-    generator = doc.get("generator", {})
-    for key in ("type", "biome_source"):
-        if key not in generator:
-            problems.append(f"{rel}: generator missing '{key}'")
-
-
-def check_placed(rel, doc):
-    if "feature" not in doc or not isinstance(doc.get("placement"), list):
-        problems.append(f"{rel}: placed feature needs 'feature' and a 'placement' list")
-        return
-    for index, modifier in enumerate(doc["placement"]):
-        if not isinstance(modifier, dict) or "type" not in modifier:
-            problems.append(f"{rel}: placement[{index}] lacks 'type'")
-
-
-def check_configured(rel, doc):
-    if "type" not in doc or "config" not in doc:
-        problems.append(f"{rel}: configured feature needs 'type' and 'config'")
-
-
-def check_model(rel, doc):
-    parent = doc.get("parent")
-    if parent is not None and not re.fullmatch(r"[a-z0-9_.-]+:[a-z0-9_/.-]+", parent):
-        problems.append(f"{rel}: invalid parent {parent!r}")
-    for key, value in (doc.get("textures") or {}).items():
-        if not isinstance(value, str):
-            continue
-        if value.startswith("#"):
-            continue
-        if not re.fullmatch(r"[a-z0-9_.-]+:[a-z0-9_/.-]+", value):
-            problems.append(f"{rel}: invalid texture reference {key}={value!r}")
-
-
-def check_sounds(rel, doc):
-    for event, entry in doc.items():
-        sounds = entry.get("sounds") if isinstance(entry, dict) else None
-        if not isinstance(sounds, list) or not sounds:
-            problems.append(f"{rel}: {event} has no sounds list")
-            continue
-        for sound in sounds:
-            name = sound.get("name") if isinstance(sound, dict) else sound
-            if not isinstance(name, str):
-                problems.append(f"{rel}: {event} has a non-string sound entry")
                 continue
-            path = name.split(":", 1)[1] if ":" in name else name
-            if path.startswith("sounds/"):
-                problems.append(f"{rel}: {event} name {name!r} must not start with 'sounds/'")
-            if "." in path:
-                problems.append(f"{rel}: {event} name {name!r} must use '/' not '.' and no "
-                                "'.ogg' suffix")
-            if name.count(":") > 1:
-                problems.append(f"{rel}: {event} name {name!r} has too many colons")
+            for entry in entries:
+                if not isinstance(entry, dict) or "type" not in entry:
+                    problems.append(f"{rel}: spawners.{category} entry lacks 'type'")
+                    continue
+                for field in ("weight", "minCount", "maxCount"):
+                    if not isinstance(entry.get(field), int):
+                        problems.append(f"{rel}: spawners.{category} entry {entry.get('type')} "
+                                        f"needs an int '{field}'")
+
+    # SpawnCost is a record -> JSON object. A bare number here aborts registry loading with
+    # "Not a JSON object: 1.0" (alpha.6 crash).
+    costs = doc.get("spawn_costs")
+    if not isinstance(costs, dict):
+        problems.append(f"{rel}: spawn_costs must be an object")
+    else:
+        for mob, cost in costs.items():
+            if not isinstance(cost, dict):
+                problems.append(f"{rel}: spawn_costs.{mob} must be an object "
+                                "{energy_budget, charge}, not a bare number")
+                continue
+            for field in ("energy_budget", "charge"):
+                if not isinstance(cost.get(field), (int, float)):
+                    problems.append(f"{rel}: spawn_costs.{mob} needs a numeric '{field}'")
+
+    probability = doc.get("creature_spawn_probability")
+    if probability is not None and not (isinstance(probability, (int, float))
+                                        and 0.0 <= probability <= 1.0):
+        problems.append(f"{rel}: creature_spawn_probability must be a number in [0, 1]")
+    effects = doc.get("effects")
+    if not isinstance(effects, dict):
+        problems.append(f"{rel}: effects must be an object")
+    else:
+        for key in ("sky_color", "fog_color", "water_color"):
+            if not isinstance(effects.get(key), int):
+                problems.append(f"{rel}: effects.{key} must be an int")
+        mood = effects.get("mood_sound")
+        if mood is not None:
+            for key in ("sound", "tick_delay", "block_search_extent", "offset"):
+                if key not in mood:
+                    problems.append(f"{rel}: effects.mood_sound missing '{key}'")
+    if not isinstance(doc.get("temperature"), (int, float)):
+        problems.append(f"{rel}: temperature must be numeric")
+    if "has_precipitation" not in doc:
+        problems.append(f"{rel}: has_precipitation is required in 1.20.1")
+
+
+def check_dimension_type(rel, doc):
+    required = ["ultrawarm", "natural", "coordinate_scale", "has_skylight", "has_ceiling",
+                "ambient_light", "monster_spawn_light_level", "monster_spawn_block_light_limit",
+                "piglin_safe", "bed_works", "respawn_anchor_works", "has_raids",
+                "logical_height", "min_y", "height", "infiniburn", "effects"]
+    for key in required:
+        if key not in doc:
+            problems.append(f"{rel}: missing required field '{key}'")
+    if isinstance(doc.get("min_y"), int) and doc.get("min_y") % 16:
+        problems.append(f"{rel}: min_y must be a multiple of 16")
+    if isinstance(doc.get("height"), int) and doc.get("height") % 16:
+        problems.append(f"{rel}: height must be a multiple of 16")
+    logical = doc.get("logical_height")
+    height = doc.get("height")
+    if isinstance(logical, int) and isinstance(height, int) and logical > height:
+        problems.append(f"{rel}: logical_height must be <= height")
+    infiniburn = doc.get("infiniburn")
+    if isinstance(infiniburn, str) and not infiniburn.startswith("#"):
+        problems.append(f"{rel}: infiniburn must be a tag id ('#minecraft:...')")
+
+    # IntProvider codec: int, or {"type": ..., "value": ...}. A flat {"type":..., "min_inclusive":...}
+    # parses as "Not a JSON object: null" and aborts registry loading (alpha.6 crash).
+    light = doc.get("monster_spawn_light_level")
+    if isinstance(light, dict):
+        if "type" not in light or "value" not in light:
+            problems.append(f"{rel}: monster_spawn_light_level as an IntProvider needs "
+                            '{"type": ..., "value": ...}')
+        elif not isinstance(light["value"], (int, dict)):
+            problems.append(f"{rel}: monster_spawn_light_level.value must be an int or an object")
+    elif not isinstance(light, int):
+        problems.append(f"{rel}: monster_spawn_light_level must be an int or an IntProvider")
+    if not isinstance(doc.get("monster_spawn_block_light_limit"), int):
+        problems.append(f"{rel}: monster_spawn_block_light_limit must be an int")
+    ambient = doc.get("ambient_light")
+    if isinstance(ambient, (int, float)) and not 0.0 <= ambient <= 1.0:
+        problems.append(f"{rel}: ambient_light must be in [0, 1]")
+
+
+def check_dimension(rel, doc):
+    for key in ("type", "generator"):
+        if key not in doc:
+            problems.append(f"{rel}: missing '{key}'")
+    generator = doc.get("generator", {})
+    for key in ("type", "biome_source"):
+        if key not in generator:
+            problems.append(f"{rel}: generator missing '{key}'")
+
+
+def check_placed(rel, doc):
+    if "feature" not in doc or not isinstance(doc.get("placement"), list):
+        problems.append(f"{rel}: placed feature needs 'feature' and a 'placement' list")
+        return
+    for index, modifier in enumerate(doc["placement"]):
+        if not isinstance(modifier, dict) or "type" not in modifier:
+            problems.append(f"{rel}: placement[{index}] lacks 'type'")
+
+
+def check_configured(rel, doc):
+    if "type" not in doc or "config" not in doc:
+        problems.append(f"{rel}: configured feature needs 'type' and 'config'")
+
+
+def check_model(rel, doc):
+    parent = doc.get("parent")
+    if parent is not None and not re.fullmatch(r"[a-z0-9_.-]+:[a-z0-9_/.-]+", parent):
+        problems.append(f"{rel}: invalid parent {parent!r}")
+    for key, value in (doc.get("textures") or {}).items():
+        if not isinstance(value, str):
+            continue
+        if value.startswith("#"):
+            continue
+        if not re.fullmatch(r"[a-z0-9_.-]+:[a-z0-9_/.-]+", value):
+            problems.append(f"{rel}: invalid texture reference {key}={value!r}")
 
 
 def check_recipe(rel, doc):

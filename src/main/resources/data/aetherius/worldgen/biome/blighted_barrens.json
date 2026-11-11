@@ -56,8 +56,14 @@
     "misc": []
   },
   "spawn_costs": {
-    "aetherius:void_warped_abomination": 1.5,
-    "aetherius:void_specter": 1.0
+    "aetherius:void_warped_abomination": {
+      "energy_budget": 0.5,
+      "charge": 0.5
+    },
+    "aetherius:void_specter": {
+      "energy_budget": 0.7,
+      "charge": 0.15
+    }
   },
   "creature_spawn_probability": 0.08
 }

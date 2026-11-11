@@ -63,9 +63,18 @@
     "misc": []
   },
   "spawn_costs": {
-    "aetherius:void_specter": 1.0,
-    "aetherius:void_sentinel": 2.0,
-    "aetherius:aether_manta": 0.6
+    "aetherius:void_specter": {
+      "energy_budget": 0.7,
+      "charge": 0.15
+    },
+    "aetherius:void_sentinel": {
+      "energy_budget": 0.5,
+      "charge": 0.4
+    },
+    "aetherius:aether_manta": {
+      "energy_budget": 0.8,
+      "charge": 0.1
+    }
   },
   "creature_spawn_probability": 0.08
 }

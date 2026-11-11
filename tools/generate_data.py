@@ -97,8 +97,10 @@ def main():
         # Sky light in a dimension with has_skylight = true is always 15, so a light level of 0
         # would mean "monsters can never spawn on the islands". A 0-7 uniform band gives the
         # eternal twilight the intended feel: monsters appear in shadowed spots, not in daylight.
-        "monster_spawn_light_level": {"type": "minecraft:uniform",
-                                      "min_inclusive": 0, "max_inclusive": 7},
+        "monster_spawn_light_level": {
+            "type": "minecraft:uniform",
+            "value": {"min_inclusive": 0, "max_inclusive": 7},
+        },
         "monster_spawn_block_light_limit": 0,
         "piglin_safe": False,
         "bed_works": False,
@@ -130,7 +132,7 @@ def main():
                   "ambient": [{"type": "minecraft:bat", "weight": 4,
                                "minCount": 1, "maxCount": 2}]},
         music="minecraft:ambient.cave",
-        spawn_costs={"minecraft:bat": 1.0}))
+        spawn_costs={"minecraft:bat": {"energy_budget": 0.6, "charge": 0.12}}))
 
     dump("worldgen/biome/shattered_sky.json", biome(
         0.3, 0.2, 0x1A1030, 0x2B1A4A, 0x4A2F82,
@@ -143,8 +145,9 @@ def main():
                               {"type": "aetherius:void_sentinel", "weight": 3,
                                "minCount": 1, "maxCount": 1}]},
         music="minecraft:ambient.cave",
-        spawn_costs={"aetherius:void_specter": 1.0, "aetherius:void_sentinel": 2.0,
-                     "aetherius:aether_manta": 0.6}))
+        spawn_costs={"aetherius:void_specter": {"energy_budget": 0.7, "charge": 0.15},
+                     "aetherius:void_sentinel": {"energy_budget": 0.5, "charge": 0.4},
+                     "aetherius:aether_manta": {"energy_budget": 0.8, "charge": 0.1}}))
 
     dump("worldgen/biome/blighted_barrens.json", biome(
         1.1, 0.1, 0x2A1030, 0x3A1030, 0x5A1F3A,
@@ -155,7 +158,8 @@ def main():
                               {"type": "aetherius:void_specter", "weight": 12,
                                "minCount": 1, "maxCount": 3}]},
         music="minecraft:ambient.cave",
-        spawn_costs={"aetherius:void_warped_abomination": 1.5, "aetherius:void_specter": 1.0}))
+        spawn_costs={"aetherius:void_warped_abomination": {"energy_budget": 0.5, "charge": 0.5},
+                     "aetherius:void_specter": {"energy_budget": 0.7, "charge": 0.15}}))
 
     # ---------------------------------------------------------------- loot
     dump("loot_tables/blocks/star_vein_ore.json", block_loot(

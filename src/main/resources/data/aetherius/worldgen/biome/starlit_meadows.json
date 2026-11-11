@@ -59,7 +59,10 @@
     "misc": []
   },
   "spawn_costs": {
-    "minecraft:bat": 1.0
+    "minecraft:bat": {
+      "energy_budget": 0.6,
+      "charge": 0.12
+    }
   },
   "creature_spawn_probability": 0.08
 }
