@@ -1,5 +1,4 @@
-gradle exit: 1
+gradle exit: 0
 
 --- errors ---
-8:FAILURE: Build failed with an exception.
-176:Caused by: java.lang.IllegalStateException: Mod was built with a newer version of Loom (1.10.5), you are using Loom (1.5.8)
+8:/home/runner/work/Fabric-mod/Fabric-mod/src/main/java/com/aetherius/mixin/EntityGravityMixin.java:29: warning: Unable to determine descriptor for @Inject target method
