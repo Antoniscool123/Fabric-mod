@@ -115,14 +115,43 @@ tasks.register('probeApi') {
                 println "NESTED ${n}: unavailable"
             }
         }
-        try {
-            def ps = loader.loadClass('net.minecraft.world.PersistentState')
-            ps.declaredConstructors.each { println "PS-CTOR ${it}" }
-            ps.declaredMethods.findAll { it.name == 'Type' || it.name.contains('Type') }.each {
-                println "PS-METHOD ${it}"
+        // Candidate-name probing for classes whose Yarn name is uncertain in 1.20.1.
+        ['net.minecraft.util.math.MathHelper', 'net.minecraft.util.MathHelper',
+         'net.minecraft.util.math.Mth', 'net.minecraft.util.Mth',
+         'net.minecraft.client.model.EntityModel', 'net.minecraft.client.model.Model',
+         'net.minecraft.world.World\$ExplosionSourceType',
+         'net.minecraft.world.explosion.Explosion\$DestructionType',
+         'net.minecraft.world.PersistentStateManager',
+         'net.minecraft.client.model.Model\$1'].each { n ->
+            try {
+                loader.loadClass(n.replace('\\\$', '\$'))
+                println "CAND OK   ${n}"
+            } catch (Throwable ignored) {
+                println "CAND MISS ${n}"
             }
+        }
+        // Signature dump for the classes that need exact API shapes.
+        ['net.minecraft.world.PersistentStateManager', 'net.minecraft.client.model.Model',
+         'net.minecraft.entity.boss.BossBar', 'net.minecraft.world.World'].each { n ->
+            try {
+                def c = loader.loadClass(n)
+                println "SIG === ${n}"
+                c.declaredConstructors.each { ctor -> println "  CTOR ${ctor}" }
+                c.declaredMethods.findAll { m ->
+                    m.toString().matches('.*(getOrCreate|createExplosion|setColor|setName|setDarkenSky|setThickenFog|darkenSky|thickenFog).*')
+                }.each { m -> println "  METHOD ${m}" }
+                c.declaredFields.findAll { f -> f.name.toLowerCase().contains('explosion') }
+                    .each { f -> println "  FIELD ${f}" }
+            } catch (Throwable t) {
+                println "SIG ${n}: unavailable (${t.class.simpleName})"
+            }
+        }
+        try {
+            def model = loader.loadClass('net.minecraft.client.model.Model')
+            println "MODEL abstract=${java.lang.reflect.Modifier.isAbstract(model.modifiers)} "
+                    + "supers=${model.superclass?.name}"
         } catch (Throwable ignored) {
-            println 'PS-CTOR unavailable'
+            println 'MODEL unavailable'
         }
     }
 }
