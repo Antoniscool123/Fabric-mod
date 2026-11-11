@@ -72,7 +72,7 @@ public class ChronicleScreen extends Screen {
         this.panelLeft = (this.width - panelWidth) / 2;
         this.panelTop = (this.height - panelHeight) / 2;
 
-        this.addDrawableChild(Button.builder(Text.translatable("aetherius.chronicle.close"),
+        this.addDrawableChild(ButtonWidget.builder(Text.translatable("aetherius.chronicle.close"),
                         button -> this.close())
                 .dimensions(this.width / 2 - 40, panelTop + panelHeight - 24, 80, 18).build());
 
