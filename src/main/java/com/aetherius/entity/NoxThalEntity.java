@@ -739,7 +739,7 @@ public class NoxThalEntity extends PathAwareEntity implements GeoEntity {
         grounded = nbt.getBoolean("Grounded");
         supernovaActive = nbt.getBoolean("Supernova");
         rangedImmune = nbt.getBoolean("RangedImmune");
-        applyBarColor(currentPhase());
+        sendBossEvent(BossEventS2CPacket.Kind.PHASE_CHANGE, 40);
     }
 
     @Override

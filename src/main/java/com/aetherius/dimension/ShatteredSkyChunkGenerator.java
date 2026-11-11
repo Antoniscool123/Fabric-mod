@@ -21,6 +21,7 @@ import net.minecraft.world.gen.chunk.Blender;
 import net.minecraft.world.gen.chunk.ChunkGenerator;
 import net.minecraft.world.gen.noise.NoiseConfig;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
@@ -273,6 +274,12 @@ public class ShatteredSkyChunkGenerator extends ChunkGenerator {
                       net.minecraft.world.biome.source.BiomeAccess biomeAccess, StructureAccessor structureAccessor,
                       Chunk chunk, net.minecraft.world.gen.GenerationStep.Carver carverStep) {
         // No carvers: the dimension ships an empty carver list, so caves are simply not carved.
+    }
+
+    @Override
+    public void getDebugHudText(List<String> text, NoiseConfig noiseConfig, BlockPos pos) {
+        text.add("Aetherius: Shattered Sky terrain (seed " + worldSeed()
+                + ", surface " + surfaceHeight(pos.getX(), pos.getZ(), worldSeed()) + ")");
     }
 
     @Override
