@@ -313,28 +313,45 @@ def skin_texture(primary, secondary, accent, seed, size=64):
 
 
 def dragon_texture(size_w=256, size_h=256):
-    """UV atlas for NoxThalModel. Regions match the cuboid uv() calls in that file."""
+    """Atlas for NoxThalModel: three big material patches, matching the UV_* constants there.
+
+    scales (0,0 96x96) · membrane (0,96 96x96) · bone (100,0 32x32). Every cuboid samples one of
+    those, and each patch is a little larger than the largest box footprint that uses it
+    (2*(w+d) x (h+d)), so no part can bleed into a neighbouring material.
+    """
     img = blank(size_w, size_h)
     rnd = random.Random(99)
-    scale_dark = (26, 16, 46, 255)
-    scale_light = (52, 32, 82, 255)
-    for y in range(size_h):
-        for x in range(size_w):
-            if rnd.random() < 0.06:
-                continue
-            img[y][x] = scale_light if (x + y) % 7 == 0 else scale_dark
-    draw_rect(img, 0, 0, 104, 50, (36, 22, 60, 255))      # torso
-    draw_rect(img, 0, 22, 104, 32, (74, 48, 104, 255))    # belly plates
-    draw_rect(img, 0, 52, 32, 21, (34, 20, 58, 255))      # neck
-    draw_rect(img, 0, 76, 52, 26, (44, 26, 70, 255))      # skull
-    draw_rect(img, 4, 84, 44, 9, (162, 70, 214, 255))     # eye glow band
-    draw_rect(img, 56, 76, 28, 14, (72, 44, 104, 255))    # snout
-    draw_rect(img, 56, 92, 12, 7, (206, 196, 226, 255))   # horns
-    draw_rect(img, 0, 106, 108, 24, (62, 38, 92, 255))    # wing membrane
-    draw_rect(img, 112, 106, 64, 14, (48, 30, 76, 255))   # inner vane
-    draw_rect(img, 0, 132, 64, 32, (38, 24, 62, 255))     # tail
-    draw_rect(img, 66, 132, 52, 12, (150, 62, 202, 255))  # tail fin
-    draw_rect(img, 120, 150, 20, 18, (30, 18, 50, 255))   # legs
+
+    def fill(x0, y0, w, h, base, light, dark_chance=0.18, light_period=7):
+        for y in range(y0, y0 + h):
+            for x in range(x0, x0 + w):
+                v = rnd.random()
+                if v < 0.05:
+                    img[y][x] = shade(base, 0.82)
+                elif v < 0.05 + dark_chance:
+                    img[y][x] = shade(base, 0.9)
+                elif (x + y) % light_period == 0:
+                    img[y][x] = light
+                else:
+                    img[y][x] = base
+
+    # --- scales: dark violet, faint diagonal scale rows
+    fill(0, 0, 96, 96, (42, 26, 66, 255), (66, 42, 100, 255), 0.2, 6)
+    draw_rect(img, 0, 0, 96, 2, (24, 14, 40, 255))
+    draw_rect(img, 0, 46, 96, 48, (24, 14, 40, 255))
+
+    # --- membrane: lighter, veined
+    fill(0, 96, 96, 96, (74, 48, 112, 255), (108, 74, 156, 255), 0.12, 11)
+    for i in range(0, 96, 12):
+        draw_rect(img, i, 96, i + 1, 192, (52, 32, 82, 255))
+
+    # --- bone: pale horn/claw material
+    fill(100, 0, 32, 32, (206, 198, 224, 255), (232, 226, 244, 255), 0.08, 5)
+
+    # --- eye glow band lives on the skull's front face inside the scale patch
+    draw_rect(img, 58, 4, 94, 12, (176, 74, 230, 255))
+    draw_rect(img, 61, 6, 73, 10, (240, 210, 255, 255))
+    draw_rect(img, 79, 6, 91, 10, (240, 210, 255, 255))
     return img
 
 

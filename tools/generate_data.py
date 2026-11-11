@@ -21,7 +21,8 @@ EMPTY_SPAWNERS = {k: [] for k in ["monster", "creature", "ambient", "axolotls",
                                   "water_ambient", "misc"]}
 
 
-def biome(temperature, downfall, sky, fog, water, features, spawners=None, music=None):
+def biome(temperature, downfall, sky, fog, water, features, spawners=None, music=None,
+          spawn_costs=None):
     body = {
         "temperature": temperature,
         "downfall": downfall,
@@ -35,7 +36,10 @@ def biome(temperature, downfall, sky, fog, water, features, spawners=None, music
         "carvers": {"air": []},
         "features": features,
         "spawners": spawners or EMPTY_SPAWNERS,
-        "spawn_costs": {},
+        # Vanilla's spawn budget: a mob of this type already nearby makes the next one of the
+        # same type less likely. Without entries the floating-island biomes filled up fast.
+        "spawn_costs": spawn_costs or {},
+        "creature_spawn_probability": 0.08,
     }
     if music:
         body["effects"]["mood_sound"] = {
@@ -90,8 +94,12 @@ def main():
         "has_ceiling": False,
         "ambient_light": 0.14,
         "fixed_time": 15000,
-        "monster_spawn_light_level": 0,
-        "monster_spawn_block_light_limit": 15,
+        # Sky light in a dimension with has_skylight = true is always 15, so a light level of 0
+        # would mean "monsters can never spawn on the islands". A 0-7 uniform band gives the
+        # eternal twilight the intended feel: monsters appear in shadowed spots, not in daylight.
+        "monster_spawn_light_level": {"type": "minecraft:uniform",
+                                      "min_inclusive": 0, "max_inclusive": 7},
+        "monster_spawn_block_light_limit": 0,
         "piglin_safe": False,
         "bed_works": False,
         "respawn_anchor_works": False,
@@ -121,7 +129,8 @@ def main():
                                 "minCount": 1, "maxCount": 3}],
                   "ambient": [{"type": "minecraft:bat", "weight": 4,
                                "minCount": 1, "maxCount": 2}]},
-        music="minecraft:ambient.cave"))
+        music="minecraft:ambient.cave",
+        spawn_costs={"minecraft:bat": 1.0}))
 
     dump("worldgen/biome/shattered_sky.json", biome(
         0.3, 0.2, 0x1A1030, 0x2B1A4A, 0x4A2F82,
@@ -133,7 +142,9 @@ def main():
                                "minCount": 1, "maxCount": 3},
                               {"type": "aetherius:void_sentinel", "weight": 3,
                                "minCount": 1, "maxCount": 1}]},
-        music="minecraft:ambient.cave"))
+        music="minecraft:ambient.cave",
+        spawn_costs={"aetherius:void_specter": 1.0, "aetherius:void_sentinel": 2.0,
+                     "aetherius:aether_manta": 0.6}))
 
     dump("worldgen/biome/blighted_barrens.json", biome(
         1.1, 0.1, 0x2A1030, 0x3A1030, 0x5A1F3A,
@@ -143,7 +154,8 @@ def main():
                                "minCount": 2, "maxCount": 5},
                               {"type": "aetherius:void_specter", "weight": 12,
                                "minCount": 1, "maxCount": 3}]},
-        music="minecraft:ambient.cave"))
+        music="minecraft:ambient.cave",
+        spawn_costs={"aetherius:void_warped_abomination": 1.5, "aetherius:void_specter": 1.0}))
 
     # ---------------------------------------------------------------- loot
     dump("loot_tables/blocks/star_vein_ore.json", block_loot(

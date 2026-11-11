@@ -1,5 +1,6 @@
 package com.aetherius.entity;
 
+import com.aetherius.world.SkySpawnRules;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MovementType;
@@ -52,11 +53,17 @@ public class AetherMantaEntity extends PathAwareEntity {
     @Override
     public void tick() {
         super.tick();
-        if (!this.getWorld().isClient) {
-            // Gentle bobbing so the manta reads as "swimming" through the air.
-            if (this.age % 40 == 0) {
-                this.setVelocity(this.getVelocity().add(0, 0.02, 0));
-            }
+        if (this.getWorld().isClient) {
+            return;
+        }
+        // Hold a lazy altitude band over the island: previously the manta only ever gained height
+        // (+0.02 every 40 ticks) and would slowly climb out of the world.
+        if (this.getFirstPassenger() == null && this.age % 20 == 0) {
+            double correction = SkySpawnRules.hoverCorrection(this.getWorld(), this.getBlockPos(), 12.0);
+            this.setVelocity(this.getVelocity().add(0, correction * 0.6, 0));
+        }
+        if (SkySpawnRules.isLostToVoid(this.getWorld(), this.getBlockPos())) {
+            this.discard();
         }
     }
 

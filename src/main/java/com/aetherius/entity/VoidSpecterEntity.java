@@ -2,6 +2,7 @@ package com.aetherius.entity;
 
 import com.aetherius.api.magic.MagicComponents;
 import com.aetherius.registry.ModParticles;
+import com.aetherius.world.SkySpawnRules;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
@@ -69,7 +70,13 @@ public class VoidSpecterEntity extends HostileEntity {
             }
             this.getLookControl().lookAt(target, 30f, 30f);
         } else {
-            this.setVelocity(this.getVelocity().multiply(0.94).add(0, -0.01, 0));
+            // Idle drift: hold altitude over the island instead of sinking into the void for ever.
+            double correction = SkySpawnRules.hoverCorrection(this.getWorld(), this.getBlockPos(), 9.0);
+            this.setVelocity(this.getVelocity().multiply(0.94).add(0, correction, 0));
+        }
+        if (SkySpawnRules.isLostToVoid(this.getWorld(), this.getBlockPos())) {
+            this.discard();
+            return;
         }
         this.move(net.minecraft.entity.MovementType.SELF, this.getVelocity());
     }

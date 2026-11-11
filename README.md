@@ -24,8 +24,8 @@ Assets:   48 generated textures · 65 block/item models · 45 data files
 
 ## Download & play
 
-1. Download **[aetherius-1.0.0-alpha.5.jar](https://github.com/Antoniscool123/Fabric-mod/releases/download/v1.0.0-alpha.5/aetherius-1.0.0-alpha.5.jar)**
-   (plus [`SHA256SUMS.txt`](https://github.com/Antoniscool123/Fabric-mod/releases/download/v1.0.0-alpha.5/SHA256SUMS.txt)).
+1. Download **[aetherius-1.0.0-alpha.6.jar](https://github.com/Antoniscool123/Fabric-mod/releases/download/v1.0.0-alpha.6/aetherius-1.0.0-alpha.6.jar)**
+   (plus [`SHA256SUMS.txt`](https://github.com/Antoniscool123/Fabric-mod/releases/download/v1.0.0-alpha.6/SHA256SUMS.txt)).
 2. Install **Fabric Loader 0.15.11+** for Minecraft **1.20.1**.
 3. Drop the jar **and** [Fabric API 0.92.2+1.20.1](https://modrinth.com/mod/fabric-api) into `.minecraft/mods`.
 4. Launch, create a world, and press **K** to open the Chronicle.
@@ -315,6 +315,7 @@ The asset pipeline is pure Python (no Pillow, no external downloads):
 | `tools/check_chronicle.py` | quest flags, objective classes, rune constants resolve |
 | `tools/check_lang.py` | translation keys used in Java exist in `en_us.json` |
 | `tools/check_data.py` | biome/dimension/model/recipe JSON shapes — encodes the bugs found at first launch |
+| `tools/preview_model.py` | rasterises the Nox'Thal cuboids to `docs/img/nox_thal_model.png` — catches broken pivots without launching the game |
 
 Run them all:
 
@@ -331,6 +332,8 @@ python3 tools/check_java.py && python3 tools/check_refs.py \
 - **Gameplay untested.** The client launches and the mod initialises, but no one has walked
   through Act I end-to-end yet. See `docs/VERIFICATION.md` for exactly what was checked.
 - Textures and models are generated placeholders — readable silhouettes, not final art.
+  The Nox'Thal model has an offline preview: `docs/img/nox_thal_model.png`
+  (`python3 tools/preview_model.py`).
 - No custom audio files: every sound is an alias of a real vanilla `SoundEvents` constant, so
   there is no `sounds.json` and nothing can point at a missing `.ogg`.
 - Biome *injection* into vanilla worldgen needs TerraBlender or a datapack override; the

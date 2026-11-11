@@ -6,8 +6,12 @@
   "has_ceiling": false,
   "ambient_light": 0.14,
   "fixed_time": 15000,
-  "monster_spawn_light_level": 0,
-  "monster_spawn_block_light_limit": 15,
+  "monster_spawn_light_level": {
+    "type": "minecraft:uniform",
+    "min_inclusive": 0,
+    "max_inclusive": 7
+  },
+  "monster_spawn_block_light_limit": 0,
   "piglin_safe": false,
   "bed_works": false,
   "respawn_anchor_works": false,

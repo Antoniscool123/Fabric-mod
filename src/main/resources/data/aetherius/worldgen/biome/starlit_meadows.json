@@ -58,5 +58,8 @@
     "water_ambient": [],
     "misc": []
   },
-  "spawn_costs": {}
+  "spawn_costs": {
+    "minecraft:bat": 1.0
+  },
+  "creature_spawn_probability": 0.08
 }

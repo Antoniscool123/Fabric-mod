@@ -62,5 +62,10 @@
     "water_ambient": [],
     "misc": []
   },
-  "spawn_costs": {}
+  "spawn_costs": {
+    "aetherius:void_specter": 1.0,
+    "aetherius:void_sentinel": 2.0,
+    "aetherius:aether_manta": 0.6
+  },
+  "creature_spawn_probability": 0.08
 }

@@ -4,6 +4,42 @@ All notable changes to Aetherius: Echoes of the Shattered Sky.
 The mod is in alpha: versions are `1.0.0-alpha.N`, each one a playable checkpoint rather than a
 finished product. Jars are attached to the matching GitHub release.
 
+## [1.0.0-alpha.6] — 2026-11-11
+
+### Fixed
+
+- **Nothing spawns in the void any more.** No Aetherius entity had a `SpawnRestriction`, which
+  vanilla reads as "spawns anywhere the position is free" — in a sky dimension that is the entire
+  256-block column. All ten types now register one: walkers require a solid block under the feet,
+  fliers require island ground within 24 blocks plus headroom, the boss and gravity anchor require
+  open sky at least 6 blocks above an island. Vanilla's spawn machinery does the rest.
+- **Specters no longer sink for ever.** They had `setNoGravity(true)` plus a constant downward
+  drift, so an idle specter fell into the void. They now hold an altitude band over their island
+  and are removed if they end up in the void.
+- **Mantas no longer climb out of the world.** They only ever gained height; they now hold a band
+  around 12 blocks above the island ground.
+- **Monsters can actually spawn on the islands.** `monster_spawn_light_level` was `0` while the
+  dimension has skylight, so the light check could never pass. It is now a 0-7 uniform band.
+- Biome spawn budgets: `spawn_costs` per mob plus `creature_spawn_probability: 0.08`.
+- **Nox'Thal model, third pass.** The head was a sibling of the neck (so neck rotation tore it
+  off) and torso bobbing moved the torso alone. The head is now parented to the neck, whole-body
+  motion is applied to the model root, and the geometry is rebuilt as: tapered chest+hips torso
+  with spine plates and a shoulder hump, a two-step forward-leaning neck, a 14x13x12 skull with
+  brow, jaw, snout, crest and swept horns, four-bone wings with four membrane panels and claws, a
+  three-segment tail with a vertical fin, and four two-bone legs landing exactly on the ground
+  plane. Renderer scale is now 1.0 — the model is authored at true size (2.8 blocks tall,
+  5.9 block wingspan) with shadow radius 2.2.
+
+### Added
+
+- `tools/preview_model.py` — rasterises `NoxThalModel`'s cuboids offline into
+  `docs/img/nox_thal_model.png` (side, three-quarter, top views, airborne pose applied). Both model
+  bugs above were found with it, before a release.
+- `fabric.mod.json` now *suggests* (never requires) Mod Menu, Cloth Config, Sodium, Indium, Iris,
+  Jade and Xaero's Minimap, and dropped the stale TerraBlender suggestion.
+- `docs/OPTIONAL_MODS.md` rewritten: what to install, what to skip, and why a hard dependency on an
+  animation library (GeckoLib) is a choice rather than a default.
+
 ## [1.0.0-alpha.5] — 2026-11-11
 
 Playability patch. The world already loaded in alpha.4; this release makes the things you can

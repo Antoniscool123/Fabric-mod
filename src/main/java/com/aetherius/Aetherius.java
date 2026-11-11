@@ -64,6 +64,7 @@ public final class Aetherius implements ModInitializer {
         ModBlockEntities.register();
         ModItemGroups.register();
         ModEntities.registerAttributes();
+        ModEntities.registerSpawnRestrictions();
         ModWorldGen.register();
 
         SpellRegistry.bootstrap();

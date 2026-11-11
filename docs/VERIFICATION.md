@@ -13,7 +13,7 @@ This file records exactly what is checked, how, and what remains unverified.
 | Gradle | 8.6 (Loom 1.5 requires ≥ 8.3) |
 | Loom / Yarn | 1.5.8 / 1.20.1+build.10 |
 | Tasks | `compileJava` → `build` (remapJar, sourcesJar) |
-| Result | green; `aetherius-1.0.0-alpha.5.jar` + `-sources.jar` + `SHA256SUMS.txt` on the release |
+| Result | green; `aetherius-1.0.0-alpha.6.jar` + `-sources.jar` + `SHA256SUMS.txt` on the release |
 | Errors left | 0 (`-Xmaxerrs 500`, so nothing is hidden behind the 100-error default) |
 
 The compile run also regenerates every asset and datapack file and re-runs the static
@@ -76,6 +76,53 @@ all reported from the same session and all fixed in `1.0.0-alpha.5`:
 The lesson recorded here: **do not hand-write asset paths the game owns.** Either point at a
 `SoundEvents` constant in Java, or ship the asset. `check_data.py` now no longer validates
 `sounds.json` because nothing ships one.
+
+---
+
+## 0d. Third run — `1.0.0-alpha.5`, and what alpha.6 changes
+
+The user confirmed **the Chronicle is interactive** (tabs, Close, ESC) and that the Nox'Thal model
+no longer falls apart — but reported it still looks wrong, and that **things spawn in the Shattered
+Sky where there is no block**.
+
+### Spawning in mid-air — the actual cause
+
+Nothing registered a `SpawnRestriction` for any Aetherius entity. Vanilla treats a type without a
+restriction as *"may spawn wherever the position is free"*, and "free" in a sky dimension is
+"anywhere in the 256-block column". So specters, sentinels, mantas and abominations appeared in
+open air. On top of that:
+
+- `VoidSpecterEntity` applied a constant `-0.01` downward drift with `setNoGravity(true)`, so any
+  specter not currently chasing a player sank into the void for ever.
+- `AetherMantaEntity` only ever gained height (`+0.02` every 40 ticks) and slowly climbed out of
+  the world.
+- `monster_spawn_light_level: 0` with `has_skylight: true` meant monster light level is always 15,
+  i.e. monsters could **never** spawn on the islands — the dimension was both "empty" and "noisy
+  with flying things".
+
+Fixed in alpha.6:
+
+| Change | File |
+|---|---|
+| `SpawnRestriction.register(...)` for all 10 entity types: walkers need a solid block under the feet, fliers need island ground within 24 blocks plus 3 blocks of headroom, the boss/anchor need open sky at least 6 blocks above an island | `registry/ModEntities`, `world/SkySpawnRules` |
+| Hover correction + void cleanup for the specter and manta | `entity/VoidSpecterEntity`, `entity/AetherMantaEntity` |
+| Monsters spawn in a light band of 0-7 instead of only light 0 | `dimension_type/shattered_sky.json` |
+| `spawn_costs` per biome + `creature_spawn_probability: 0.08` so spawn budgets are finite | `worldgen/biome/*.json` |
+
+### Nox'Thal model, third pass
+
+`tools/preview_model.py` now renders the model offline from the Java source (three views, with the
+airborne animation pose applied) — see `docs/img/nox_thal_model.png`. That caught two bugs a live
+test would have shown only after a release:
+
+- the head was a *sibling* of the neck, so `neck.pitch` tore the head off the body;
+- `body.pivotY` bobbing moved the torso alone, sliding it out of the neck and wings.
+
+The head is now parented to the neck, all whole-body motion is applied to the model root, and the
+geometry is a tapered chest+hips torso, a two-step forward-leaning neck, a 14x13x12 skull with
+brow, jaw, snout, crest and swept horns, four-bone wings with four membrane panels plus claws,
+a three-segment tail with a vertical fin, and four two-bone legs that land exactly on the y = 24
+ground plane. Renderer scale is now 1.0 (the model is authored at true size), shadow radius 2.2.
 
 ## 1. What is verified (mechanically)
 

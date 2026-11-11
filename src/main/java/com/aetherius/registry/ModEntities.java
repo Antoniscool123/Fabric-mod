@@ -8,11 +8,13 @@ import com.aetherius.entity.VoidSentinelEntity;
 import com.aetherius.entity.VoidSpecterEntity;
 import com.aetherius.entity.VoidWarpedAbominationEntity;
 import com.aetherius.util.Aeth;
+import com.aetherius.world.SkySpawnRules;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
 import net.minecraft.entity.EntityDimensions;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SpawnGroup;
+import net.minecraft.entity.SpawnRestriction;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 
@@ -84,6 +86,33 @@ public final class ModEntities {
 
     public static void register() {
         // Registry entries are created at class-load; attributes must be bound explicitly.
+    }
+
+    /**
+     * Vanilla's own spawn machinery: without an entry here a type is treated as "spawns anywhere
+     * the position is free", which is how mobs ended up hovering in the Shattered Sky's void.
+     */
+    public static void registerSpawnRestrictions() {
+        SpawnRestriction.register(AETHER_MANTA, SpawnRestriction.Location.NO_RESTRICTIONS,
+                SkySpawnRules.HEIGHTMAP, SkySpawnRules::nearIsland);
+        SpawnRestriction.register(VOID_SENTINEL, SpawnRestriction.Location.ON_GROUND,
+                SkySpawnRules.HEIGHTMAP, SkySpawnRules::onSolidGround);
+        SpawnRestriction.register(VOID_SPECTER, SpawnRestriction.Location.NO_RESTRICTIONS,
+                SkySpawnRules.HEIGHTMAP, SkySpawnRules::nearIsland);
+        SpawnRestriction.register(VOID_WARPED_ABOMINATION, SpawnRestriction.Location.ON_GROUND,
+                SkySpawnRules.HEIGHTMAP, SkySpawnRules::blightSpawn);
+        SpawnRestriction.register(EMBERS_WARDEN, SpawnRestriction.Location.ON_GROUND,
+                SkySpawnRules.HEIGHTMAP, SkySpawnRules::onSolidGround);
+        SpawnRestriction.register(TIDES_WARDEN, SpawnRestriction.Location.ON_GROUND,
+                SkySpawnRules.HEIGHTMAP, SkySpawnRules::onSolidGround);
+        SpawnRestriction.register(STONES_WARDEN, SpawnRestriction.Location.ON_GROUND,
+                SkySpawnRules.HEIGHTMAP, SkySpawnRules::onSolidGround);
+        SpawnRestriction.register(STORMS_WARDEN, SpawnRestriction.Location.ON_GROUND,
+                SkySpawnRules.HEIGHTMAP, SkySpawnRules::onSolidGround);
+        SpawnRestriction.register(GRAVITY_ANCHOR, SpawnRestriction.Location.NO_RESTRICTIONS,
+                SkySpawnRules.HEIGHTMAP, SkySpawnRules::openSkyOverIsland);
+        SpawnRestriction.register(NOX_THAL, SpawnRestriction.Location.NO_RESTRICTIONS,
+                SkySpawnRules.HEIGHTMAP, SkySpawnRules::openSkyOverIsland);
     }
 
     public static void registerAttributes() {

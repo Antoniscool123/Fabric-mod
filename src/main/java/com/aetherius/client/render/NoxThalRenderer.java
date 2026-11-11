@@ -10,15 +10,16 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.math.RotationAxis;
 
 /**
- * Renders Nox'Thal at 1.6x scale with a phase-reactive alpha tint: Phase 3 (Supernova) renders
- * it almost as a silhouette so the darkness overlay reads as total.
+ * Renders Nox'Thal. The model is authored at true size (feet on the standard y = 24 ground plane,
+ * ~2.8 blocks tall, ~5.5 block wingspan), so the renderer applies no scale: what you see matches
+ * the 3.0 x 3.2 hitbox, the nameplate and the shadow radius.
  */
 public class NoxThalRenderer extends MobEntityRenderer<NoxThalEntity, NoxThalModel> {
 
     private static final Identifier TEXTURE = Aeth.id("textures/entity/nox_thal.png");
 
     public NoxThalRenderer(EntityRendererFactory.Context context) {
-        super(context, new NoxThalModel(context.getPart(NoxThalModel.LAYER)), 3.0f);
+        super(context, new NoxThalModel(context.getPart(NoxThalModel.LAYER)), 2.2f);
     }
 
     @Override
@@ -28,7 +29,10 @@ public class NoxThalRenderer extends MobEntityRenderer<NoxThalEntity, NoxThalMod
 
     @Override
     protected void scale(NoxThalEntity entity, MatrixStack matrices, float amount) {
-        matrices.scale(1.6f, 1.6f, 1.6f);
+        // Phase 2 sinks the dragon towards the ground as its anchors are destroyed.
+        if (entity.phaseIndex() == 1 && entity.isGrounded()) {
+            matrices.scale(1.05f, 0.82f, 1.05f);
+        }
     }
 
     @Override
