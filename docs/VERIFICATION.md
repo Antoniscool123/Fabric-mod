@@ -169,6 +169,28 @@ GeckoLib compiles, but nothing has *run* yet:
 - The `attack` triggerable animation is wired to the cosmic-breath attack; whether it fires and
   blends back into flight was not observed.
 
+## 0f. `1.0.0-alpha.9` — four changes, one of them risky
+
+| Change | Risk | What CI proves | What only a live run can prove |
+|---|---|---|---|
+| Vanilla boss bar removed | low | compiles, no dangling `ServerBossBar` | that only one bar is on screen |
+| Guide tab in the Chronicle | low | all 33 lang keys exist, tab/mouse handling compiles | that the text fits the panel |
+| All textures regenerated | low | 47 valid PNGs, sheet inspected by eye | that they read well at 16x16 in game |
+| **Terrain rewritten + custom biome source** | **high** | compiles, dimension JSON parses, `biome_source` shape checked | that the dimension loads at all, and that the three biomes appear |
+
+The risky one is the worldgen. Two specific failure modes were designed out:
+
+- **Registry order.** `Registries.BIOME_SOURCE` is registered in `ModWorldGen.register()`, which the
+  initialiser calls *before* the datapack is read. If it were missing, the dimension fails to parse
+  and no world can be created — the alpha.6 failure mode.
+- **Sampler dependence.** A custom generator has no climate sampler, so the biome source ignores
+  `MultiNoiseUtil.MultiNoiseSampler` completely and picks regions from the same value noise the
+  terrain uses. `minecraft:multi_noise` was rejected for exactly this reason.
+
+The biome list in the dimension JSON is positional (`meadows, highlands, barrens`), and
+`ShatteredSkyBiomeSource` clamps instead of throwing if the list is short, so a partial list
+degrades to one biome instead of aborting the load.
+
 ## 1. What is verified (mechanically)
 
 | Check | Tool | Result |
