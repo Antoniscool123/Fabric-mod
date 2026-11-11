@@ -7,7 +7,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.text.Text;
-import net.minecraft.util.Mth;
+import net.minecraft.util.math.MathHelper;
 
 /**
  * Custom Nox'Thal boss bar + Supernova darkness overlay.
@@ -46,7 +46,7 @@ public final class NoxThalBossBarOverlay implements HudRenderCallback {
 
         int phase = ClientEffects.bossPhase(boss.getId());
         int rgb = ClientEffects.phaseColor(phase);
-        float healthRatio = Mth.clamp(boss.getHealth() / boss.getMaxHealth(), 0f, 1f);
+        float healthRatio = MathHelper.clamp(boss.getHealth() / boss.getMaxHealth(), 0f, 1f);
 
         int screenWidth = context.getScaledWindowWidth();
         int x = screenWidth / 2 - BAR_WIDTH / 2;

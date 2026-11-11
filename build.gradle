@@ -146,6 +146,48 @@ tasks.register('probeApi') {
                 println "SIG ${n}: unavailable (${t.class.simpleName})"
             }
         }
+        // Which jar holds Minecraft, and what does net.minecraft.client.model contain?
+        sourceSets.main.compileClasspath.files.findAll { it.name.contains('minecraft') || it.name.contains('mapped') }
+                .each { println "CP-JAR ${it.name}" }
+        sourceSets.main.compileClasspath.files.each { f ->
+            if (!f.name.endsWith('.jar')) {
+                return
+            }
+            def zf = null
+            try {
+                zf = new java.util.zip.ZipFile(f)
+                def hits = zf.entries().findAll { e ->
+                    e.name.startsWith('net/minecraft/client/model/') && e.name.endsWith('.class')
+                }.collect { it.name }
+                if (!hits.isEmpty()) {
+                    println "MODEL-PKG ${f.name}: " + hits.take(40).join(', ')
+                }
+                def ps = zf.entries().findAll { e ->
+                    e.name == 'net/minecraft/world/PersistentState.class' ||
+                            e.name == 'net/minecraft/world/PersistentStateManager.class'
+                }.collect { it.name }
+                if (!ps.isEmpty()) {
+                    println "PS-IN ${f.name}"
+                }
+            } catch (Throwable ignored) {
+            } finally {
+                if (zf != null) {
+                    zf.close()
+                }
+            }
+        }
+        ['net.minecraft.world.PersistentState', 'net.minecraft.world.PersistentStateManager',
+         'net.minecraft.world.World'].each { n ->
+            try {
+                def c = loader.loadClass(n)
+                println "API === ${n}"
+                c.declaredMethods.findAll { m ->
+                    java.lang.reflect.Modifier.isPublic(m.modifiers)
+                }.each { m -> println "  M ${m.name}(${m.parameterTypes*.simpleName.join(',')}) -> ${m.returnType.simpleName}" }
+            } catch (Throwable t) {
+                println "API ${n}: unavailable"
+            }
+        }
         try {
             def model = loader.loadClass('net.minecraft.client.model.Model')
             println "MODEL abstract=${java.lang.reflect.Modifier.isAbstract(model.modifiers)} "

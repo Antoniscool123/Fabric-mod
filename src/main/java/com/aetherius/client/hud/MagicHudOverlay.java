@@ -10,7 +10,7 @@ import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.Mth;
+import net.minecraft.util.math.MathHelper;
 
 /**
  * Custom HUD: the Mana and Astral Tension bars.
@@ -82,11 +82,11 @@ public final class MagicHudOverlay implements HudRenderCallback {
             displayedMana = mana;
             ghostMana = mana;
         }
-        displayedMana = Mth.lerp(0.25f, displayedMana, mana);
+        displayedMana = MathHelper.lerp(0.25f, displayedMana, mana);
         ghostMana = ghostMana > displayedMana
                 ? Math.max(displayedMana, ghostMana - 0.6f)
                 : displayedMana;
-        displayedTension = Mth.lerp(0.18f, displayedTension, magic.getAstralTension());
+        displayedTension = MathHelper.lerp(0.18f, displayedTension, magic.getAstralTension());
     }
 
     private void drawMana(DrawContext context, TextRenderer textRenderer, PlayerMagicCapability magic,

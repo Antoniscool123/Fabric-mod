@@ -1,7 +1,7 @@
 package com.aetherius.client;
 
 import com.aetherius.network.BossEventS2CPacket;
-import net.minecraft.util.Mth;
+import net.minecraft.util.math.MathHelper;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -125,6 +125,6 @@ public final class ClientEffects {
 
     /** Clamp helper used by overlays. */
     public static float clamp01(float value) {
-        return Mth.clamp(value, 0f, 1f);
+        return MathHelper.clamp(value, 0f, 1f);
     }
 }

@@ -1,7 +1,7 @@
 package com.aetherius.api.spell;
 
 import com.aetherius.api.magic.Rune;
-import net.minecraft.util.Mth;
+import net.minecraft.util.math.MathHelper;
 
 /**
  * Cost table for a rune sequence.
@@ -34,6 +34,6 @@ public record MagicCosts(float mana, float tension) {
         if (combination.distinctSchools() == 3) {
             mana *= 0.9f;
         }
-        return new MagicCosts(Mth.ceil(mana), tension);
+        return new MagicCosts(MathHelper.ceil(mana), tension);
     }
 }

@@ -28,7 +28,7 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.Mth;
+import net.minecraft.util.math.MathHelper;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -288,7 +288,7 @@ public final class PlayerMagicCapability implements MagicUser {
         if (amount <= 0f) {
             return;
         }
-        astralTension = Mth.clamp(astralTension + amount * (1f - tensionResistance), 0f, 100f);
+        astralTension = MathHelper.clamp(astralTension + amount * (1f - tensionResistance), 0f, 100f);
         if (astralTension >= BACKFIRE_THRESHOLD && backfireTicks <= 0) {
             triggerAstralBackfire();
         }
@@ -357,7 +357,7 @@ public final class PlayerMagicCapability implements MagicUser {
 
     /** Reduces future tension gain, awarded by the Purification rite. */
     public void addTensionResistance(float amount) {
-        tensionResistance = Mth.clamp(tensionResistance + amount, 0f, 0.75f);
+        tensionResistance = MathHelper.clamp(tensionResistance + amount, 0f, 0.75f);
         markDirty();
     }
 
@@ -440,7 +440,7 @@ public final class PlayerMagicCapability implements MagicUser {
 
     @Override
     public void setMana(float mana) {
-        this.mana = Mth.clamp(mana, 0f, maxMana);
+        this.mana = MathHelper.clamp(mana, 0f, maxMana);
         markDirty();
     }
 
@@ -468,7 +468,7 @@ public final class PlayerMagicCapability implements MagicUser {
 
     @Override
     public void setAstralTension(float tension) {
-        astralTension = Mth.clamp(tension, 0f, 100f);
+        astralTension = MathHelper.clamp(tension, 0f, 100f);
         markDirty();
     }
 
@@ -494,7 +494,7 @@ public final class PlayerMagicCapability implements MagicUser {
 
     @Override
     public void setSchoolMastery(SpellSchool school, int level) {
-        mastery.put(school, Mth.clamp(level, 0, 5));
+        mastery.put(school, MathHelper.clamp(level, 0, 5));
         markDirty();
     }
 
@@ -592,8 +592,8 @@ public final class PlayerMagicCapability implements MagicUser {
             return;
         }
         maxMana = nbt.contains("MaxMana") ? nbt.getFloat("MaxMana") : BASE_MAX_MANA;
-        mana = Mth.clamp(nbt.contains("Mana") ? nbt.getFloat("Mana") : maxMana, 0f, maxMana);
-        astralTension = Mth.clamp(nbt.getFloat("AstralTension"), 0f, 100f);
+        mana = MathHelper.clamp(nbt.contains("Mana") ? nbt.getFloat("Mana") : maxMana, 0f, maxMana);
+        astralTension = MathHelper.clamp(nbt.getFloat("AstralTension"), 0f, 100f);
         tensionResistance = nbt.getFloat("TensionResistance");
 
         if (nbt.contains("Runes", NbtElement.LIST_TYPE)) {

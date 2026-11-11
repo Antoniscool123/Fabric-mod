@@ -14,7 +14,7 @@ import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
-import net.minecraft.util.Mth;
+import net.minecraft.util.math.MathHelper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -329,8 +329,8 @@ public class ChronicleScreen extends Screen {
         return chronicle.unlockedLore().size();
     }
 
-    /** Kept for the in-book search feature (Mth import keeps the intent documented). */
+    /** Kept for the in-book search feature (MathHelper import keeps the intent documented). */
     private static int clampPage(int value, int max) {
-        return Mth.clamp(value, 0, Math.max(0, max));
+        return MathHelper.clamp(value, 0, Math.max(0, max));
     }
 }
