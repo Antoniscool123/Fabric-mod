@@ -118,7 +118,7 @@ jobs:
               }
             }
             let sym = '';
-            for (const f of ['jar-check.txt', 'probe.txt', 'symbols.txt', 'cpview.txt']) {
+            for (const f of ['cpview.txt', 'probe.txt', 'symbols.txt', 'jar-check.txt']) {
               try { sym += '--- ' + f + ' ---\n' + fs.readFileSync(f, 'utf8'); }
               catch (e) { sym += f + ': missing\n'; }
             }
