@@ -45,6 +45,10 @@ jobs:
           python3 tools/check_lang.py
           python3 tools/check_api.py
 
+      - name: Probe API symbols
+        run: gradle probeApi --no-daemon --console=plain > probe.txt 2>&1 || true
+        continue-on-error: true
+
       - name: Compile (diagnostic pass)
         run: |
           set +e
@@ -90,7 +94,9 @@ jobs:
               }
             }
             let sym = '';
-            try { sym = fs.readFileSync('symbols.txt', 'utf8'); } catch (e) { sym = 'no symbols.txt'; }
+            for (const f of ['probe.txt', 'symbols.txt']) {
+              try { sym += fs.readFileSync(f, 'utf8'); } catch (e) { sym += f + ': missing\n'; }
+            }
             let body = `### CI compile report\n\nGradle exit code: \`${{ env.GRADLE_EXIT }}\`\n\n`
                      + '```\n' + (out.length ? out.join('\n') : log.slice(-4000)) + '\n```';
             body += '\n\n### API symbol locations\n\n```\n' + sym.slice(0, 12000) + '\n```';
