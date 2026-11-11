@@ -117,7 +117,12 @@ def main():
         "type": "aetherius:shattered_sky",
         "generator": {
             "type": "aetherius:shattered_sky",
-            "biome_source": {"type": "minecraft:fixed", "biome": "aetherius:shattered_sky"}
+            # Order is the contract of ShatteredSkyBiomeSource: meadow, highland, barrens.
+            "biome_source": {
+                "type": "aetherius:shattered_sky",
+                "biomes": ["aetherius:starlit_meadows", "aetherius:shattered_sky",
+                           "aetherius:blighted_barrens"]
+            }
         }
     })
 

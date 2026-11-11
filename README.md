@@ -16,7 +16,7 @@ without touching a GUI editor.
 ```
 Content:  131 Java files · ~12.6k lines · 13 blocks · 32 items · 10 entities
           18 spells (+fallback) · 15 runes · 14 quests · 12 lore entries
-          3 biomes · 1 dimension · 5 particle types · 280 translation keys
+          3 biomes · 1 dimension · 5 particle types · 295 translation keys
 Assets:   48 generated textures · 65 block/item models · 45 data files
 ```
 
@@ -24,8 +24,8 @@ Assets:   48 generated textures · 65 block/item models · 45 data files
 
 ## Download & play
 
-1. Download **[aetherius-1.0.0-alpha.8.jar](https://github.com/Antoniscool123/Fabric-mod/releases/download/v1.0.0-alpha.8/aetherius-1.0.0-alpha.8.jar)**
-   (plus [`SHA256SUMS.txt`](https://github.com/Antoniscool123/Fabric-mod/releases/download/v1.0.0-alpha.8/SHA256SUMS.txt)).
+1. Download **[aetherius-1.0.0-alpha.9.jar](https://github.com/Antoniscool123/Fabric-mod/releases/download/v1.0.0-alpha.9/aetherius-1.0.0-alpha.9.jar)**
+   (plus [`SHA256SUMS.txt`](https://github.com/Antoniscool123/Fabric-mod/releases/download/v1.0.0-alpha.9/SHA256SUMS.txt)).
 2. Install **Fabric Loader 0.15.11+** for Minecraft **1.20.1**.
 3. Drop the jar, [Fabric API 0.92.2+1.20.1](https://modrinth.com/mod/fabric-api) **and**
    [GeckoLib 4.8.4+1.20.1](https://modrinth.com/mod/geckolib/versions?g=1.20.1&loader=fabric)
@@ -104,7 +104,7 @@ Details and version pins: [`docs/OPTIONAL_MODS.md`](docs/OPTIONAL_MODS.md).
 | Client (HUD, boss bar, Chronicle screen, renderers, particles, keybinds) | implemented |
 | Registries, mixins, networking, commands | implemented |
 | Datapack content (dimension, biomes, loot, recipes, tags) | implemented |
-| Assets (textures, models, lang) | generated / placeholder-quality; audio is vanilla |
+| Assets (textures, models, lang) | all 47 textures generated procedurally with tiling noise, shading and outlines; Nox'Thal is a GeckoLib model; audio is vanilla |
 | Compilation & packaging | **verified in CI** — JDK 17 / Gradle 8.14 / Loom 1.10.5, `compileJava` + `build` green, jar released |
 | Runtime (launch) | **verified** — client boots, all 4 mixins apply, `[Aetherius] Initialised in 205 ms` |
 | Runtime (world load) | first attempt crashed on a biome JSON bug (fixed in `alpha.4`, see `docs/VERIFICATION.md` §0b) |
@@ -339,7 +339,9 @@ python3 tools/check_java.py && python3 tools/check_refs.py \
 
 - **Gameplay untested.** The client launches and the mod initialises, but no one has walked
   through Act I end-to-end yet. See `docs/VERIFICATION.md` for exactly what was checked.
-- Textures and models are generated placeholders — readable silhouettes, not final art.
+- Textures are procedurally generated (`tools/generate_textures.py`): tileable value noise for
+  material, a structural pass for the readable shapes, and a lighting pass (bevels on blocks,
+  outlines and highlights on items). They are consistent but they are not hand-painted pixel art.
   The Nox'Thal model has an offline preview: `docs/img/nox_thal_model.png`
   (`python3 tools/preview_model.py`).
 - No custom audio files: every sound is an alias of a real vanilla `SoundEvents` constant, so

@@ -21,8 +21,6 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.DefaultAttributeContainer;
 import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.boss.BossBar;
-import net.minecraft.entity.boss.ServerBossBar;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.registry.tag.DamageTypeTags;
@@ -96,7 +94,6 @@ public class NoxThalEntity extends PathAwareEntity implements GeoEntity {
     private final AnimatableInstanceCache animationCache = GeckoLibUtil.createInstanceCache(this);
     private static final int TRANSITION_INVULNERABILITY = 50;
 
-    private final ServerBossBar bossBar;
     private final List<BossPhase> phases;
     private final BossBlackboard blackboard;
     private final List<GravityAnchorEntity> anchors = new ArrayList<>();
@@ -116,8 +113,6 @@ public class NoxThalEntity extends PathAwareEntity implements GeoEntity {
         this.experiencePoints = 500;
         this.phases = List.of(new StarlitHeraldPhase(), new GravityCollapsePhase(), new SupernovaPhase());
         this.blackboard = new BossBlackboard(this);
-        this.bossBar = new ServerBossBar(this.getDisplayName(), BossBar.Color.PURPLE, BossBar.Style.PROGRESS);
-        this.bossBar.setDarkenSky(true);
         this.setPersistent();
     }
 
@@ -221,7 +216,6 @@ public class NoxThalEntity extends PathAwareEntity implements GeoEntity {
         tickSupernova();
         resolvePendingStrikes();
         checkPhaseTransition();
-        updateBossBar();
     }
 
     private void hoverTowardTarget() {
@@ -257,24 +251,9 @@ public class NoxThalEntity extends PathAwareEntity implements GeoEntity {
         transitionTicks = TRANSITION_INVULNERABILITY;
         BossPhase phase = currentPhase();
         phase.onEnter(this);
-        applyBarColor(phase);
         sendBossEvent(BossEventS2CPacket.Kind.PHASE_CHANGE, 80);
         this.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, TRANSITION_INVULNERABILITY, 4,
                 false, false, false));
-    }
-
-    private void applyBarColor(BossPhase phase) {
-        this.bossBar.setColor(switch (phase.index()) {
-            case 1 -> BossBar.Color.BLUE;
-            case 2 -> BossBar.Color.RED;
-            default -> BossBar.Color.PURPLE;
-        });
-        this.bossBar.setStyle(BossBar.Style.PROGRESS);
-        this.bossBar.setName(Text.translatable(phase.titleKey()));
-    }
-
-    private void updateBossBar() {
-        this.bossBar.setPercent(Math.max(0f, this.getHealth() / this.getMaxHealth()));
     }
 
     // =====================================================================
@@ -595,7 +574,6 @@ public class NoxThalEntity extends PathAwareEntity implements GeoEntity {
     public void beginSupernova() {
         supernovaActive = true;
         supernovaTicks = 20 * 30;
-        this.bossBar.setDarkenSky(true);
         refreshSupernovaDarkness();
     }
 
@@ -607,7 +585,6 @@ public class NoxThalEntity extends PathAwareEntity implements GeoEntity {
         supernovaActive = false;
         supernovaTicks = 0;
         sendBossEvent(BossEventS2CPacket.Kind.SUPERNOVA_END, 0);
-        this.bossBar.setDarkenSky(false);
     }
 
     private void tickSupernova() {
@@ -632,7 +609,6 @@ public class NoxThalEntity extends PathAwareEntity implements GeoEntity {
     @Override
     public void onStartedTrackingBy(ServerPlayerEntity player) {
         super.onStartedTrackingBy(player);
-        this.bossBar.addPlayer(player);
         if (player.getWorld() instanceof ServerWorld serverWorld) {
             BossEventS2CPacket.send(serverWorld, this.getPos(), ARENA_RADIUS, this.getId(),
                     BossEventS2CPacket.Kind.PHASE_CHANGE, phaseIndex, 40);
@@ -642,12 +618,10 @@ public class NoxThalEntity extends PathAwareEntity implements GeoEntity {
     @Override
     public void onStoppedTrackingBy(ServerPlayerEntity player) {
         super.onStoppedTrackingBy(player);
-        this.bossBar.removePlayer(player);
     }
 
     @Override
     public void remove(net.minecraft.entity.Entity.RemovalReason reason) {
-        this.bossBar.clearPlayers();
         super.remove(reason);
     }
 
@@ -747,7 +721,6 @@ public class NoxThalEntity extends PathAwareEntity implements GeoEntity {
         }
         this.dropStack(new net.minecraft.item.ItemStack(ModItems.AETHER_SHARD, 24));
         this.dropStack(new net.minecraft.item.ItemStack(ModItems.AETHER_BLOOD, 8));
-        this.bossBar.clearPlayers();
     }
 
     @Override

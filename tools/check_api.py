@@ -33,6 +33,9 @@ types = {}          # fully-qualified-ish name -> dict(...)
 simple_index = defaultdict(list)   # simple name -> [qualified keys]
 for path in files:
     src = open(path, encoding="utf-8").read()
+    # Blank out block comments (keeping newlines) so a ';' or '{' inside a javadoc can never
+    # truncate a body: that bug hid a new enum constant from this checker once already.
+    src = re.sub(r"/\*.*?\*/", lambda m: re.sub(r"[^\n]", " ", m.group(0)), src, flags=re.S)
     for m in TYPE_DECL.finditer(src):
         kind, name, ext, impl = m.group(1), m.group(2), m.group(3), m.group(4)
         body = src[m.end():]
@@ -121,6 +124,9 @@ problems = []
 checked = 0
 for path in files:
     src = open(path, encoding="utf-8").read()
+    # Blank out block comments (keeping newlines) so a ';' or '{' inside a javadoc can never
+    # truncate a body: that bug hid a new enum constant from this checker once already.
+    src = re.sub(r"/\*.*?\*/", lambda m: re.sub(r"[^\n]", " ", m.group(0)), src, flags=re.S)
     rel = os.path.relpath(path, ROOT)
     for owner, member in METHOD_CALL.findall(src):
         methods = all_methods(owner)

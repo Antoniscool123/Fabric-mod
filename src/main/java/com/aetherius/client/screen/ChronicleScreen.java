@@ -55,6 +55,8 @@ public class ChronicleScreen extends Screen {
     private final List<Chapter> tabChapters = new ArrayList<>();
     private final List<int[]> questBounds = new ArrayList<>();
     private final List<Quest> visibleQuests = new ArrayList<>();
+    private final List<int[]> guideBounds = new ArrayList<>();
+    private int selectedGuide;
 
     private int panelLeft;
     private int panelTop;
@@ -133,7 +135,8 @@ public class ChronicleScreen extends Screen {
     private void drawTabs(DrawContext context, int mouseX, int mouseY, PlayerChronicle chronicle) {
         tabBounds.clear();
         tabChapters.clear();
-        Chapter[] chapters = {Chapter.ACT_I, Chapter.ACT_II, Chapter.ACT_III, Chapter.APPENDIX};
+        Chapter[] chapters = {Chapter.ACT_I, Chapter.ACT_II, Chapter.ACT_III, Chapter.APPENDIX,
+                Chapter.GUIDE};
         int x = panelLeft;
         int y = panelTop + 4;
         for (Chapter candidate : chapters) {
@@ -155,6 +158,12 @@ public class ChronicleScreen extends Screen {
     private void drawQuestList(DrawContext context, PlayerChronicle chronicle, int x, int y, int width) {
         visibleQuests.clear();
         questBounds.clear();
+        guideBounds.clear();
+
+        if (chapter == Chapter.GUIDE) {
+            drawGuideList(context, x, y, width);
+            return;
+        }
 
         List<Quest> quests = ChronicleRegistry.questsFor(chapter);
         int rowY = y + 6;
@@ -195,6 +204,10 @@ public class ChronicleScreen extends Screen {
     }
 
     private void drawQuestDetail(DrawContext context, PlayerChronicle chronicle, int x, int y, int width) {
+        if (chapter == Chapter.GUIDE) {
+            drawGuidePage(context, x, y, width);
+            return;
+        }
         if (selected == null) {
             context.drawTextWithShadow(this.textRenderer,
                     Text.translatable("aetherius.chronicle.no_selection"), x, y + 6, MUTED);
@@ -295,6 +308,16 @@ public class ChronicleScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (chapter == Chapter.GUIDE) {
+            for (int i = 0; i < guideBounds.size(); i++) {
+                int[] row = guideBounds.get(i);
+                if (mouseX >= row[0] && mouseX < row[0] + row[2]
+                        && mouseY >= row[1] && mouseY < row[1] + row[3]) {
+                    selectedGuide = i;
+                    return true;
+                }
+            }
+        }
         for (int i = 0; i < tabBounds.size(); i++) {
             int[] bounds = tabBounds.get(i);
             if (mouseX >= bounds[0] && mouseX < bounds[0] + bounds[2]
@@ -317,6 +340,43 @@ public class ChronicleScreen extends Screen {
             }
         }
         return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    // =====================================================================
+    //  Guide tab
+    // =====================================================================
+
+    private void drawGuideList(DrawContext context, int x, int y, int width) {
+        int rowY = y + 6;
+        for (int i = 0; i < GuidePages.SECTIONS.size(); i++) {
+            GuidePages.Section section = GuidePages.SECTIONS.get(i);
+            boolean active = i == selectedGuide;
+            if (active) {
+                context.fill(x + 2, rowY - 2, x + width, rowY + 18, 0xFF2A1B44);
+            }
+            context.drawTextWithShadow(this.textRenderer, Text.literal("\u2756 "),
+                    x + 6, rowY + 3, active ? ACCENT : MUTED);
+            context.drawText(this.textRenderer, Text.translatable(section.titleKey()),
+                    x + 20, rowY + 3, active ? TEXT : MUTED, false);
+            guideBounds.add(new int[]{x + 2, rowY - 2, width, 20});
+            rowY += 22;
+        }
+        context.drawTextWithShadow(this.textRenderer,
+                Text.translatable("aetherius.guide.pick"),
+                x + 6, y + 6 + GuidePages.SECTIONS.size() * 22 + 4, MUTED);
+    }
+
+    private void drawGuidePage(DrawContext context, int x, int y, int width) {
+        GuidePages.Section section = GuidePages.byIndex(selectedGuide);
+        context.drawTextWithShadow(this.textRenderer,
+                Text.translatable(section.titleKey()).formatted(Formatting.BOLD), x, y + 4, ACCENT);
+        int cursorY = y + 20;
+        for (String key : section.paragraphs()) {
+            cursorY = drawWrapped(context, Text.translatable(key), x, cursorY + 4, width, 8) + 2;
+            if (cursorY > panelTop + panelHeight - 44) {
+                break;
+            }
+        }
     }
 
     @Override

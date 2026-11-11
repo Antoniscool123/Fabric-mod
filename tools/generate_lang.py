@@ -174,6 +174,73 @@ L["aetherius.chronicle.tracked"] = "Tracking %s"
 L["aetherius.chronicle.unknown"] = "an unknown entry"
 L["aetherius.chronicle.quest_complete"] = "Chronicle updated: %s"
 
+# ------------------------------------------------------------------ guide tab
+L["aetherius.chronicle.chapter.guide"] = "Guide"
+L["aetherius.guide.pick"] = "Pick a page on the left."
+L["aetherius.guide.start.title"] = "Getting started"
+L["aetherius.guide.start.p1"] = ("Press K at any time to open this Chronicle. It does not pause the "
+                                 "world, so close it with Esc before a fight.")
+L["aetherius.guide.start.p2"] = ("The Astral Wand is the tool of the trade: a stick and two Aether "
+                                 "Shards in a diagonal shape. Hold it and right-click to cast the "
+                                 "runes you have inscribed.")
+L["aetherius.guide.start.p3"] = ("Aether Shards come from Star-Vein Ore, found under the ground of "
+                                 "the Shattered Sky, and from most Aetherius creatures. A Chronicle "
+                                 "Tome (book + shard + ink sac) opens this book from your hand.")
+L["aetherius.guide.start.p4"] = ("Commands, if you play with cheats: /aetherius spells, /aetherius "
+                                 "quests, /aetherius rune list, /aetherius mana fill.")
+L["aetherius.guide.runes.title"] = "Runes and spells"
+L["aetherius.guide.runes.p1"] = ("Magic is written in runes. Fifteen of them exist, and every "
+                                 "combination of up to three carves out a spell - eighteen spells "
+                                 "in all, from light to gravity.")
+L["aetherius.guide.runes.p2"] = ("Press R to inscribe the next rune you know, Shift+R to clear the "
+                                 "line. The HUD by the crosshair shows the line and which spell it "
+                                 "will cast.")
+L["aetherius.guide.runes.p3"] = ("Casting costs mana, which refills on its own. It also builds "
+                                 "Astral Tension: past 50 your spells hit twice as hard and cost "
+                                 "twice as much, and at 100 the pool backfires. Stop casting and "
+                                 "the tension bleeds away.")
+L["aetherius.guide.runes.p4"] = ("New runes are Chronicle rewards. /aetherius rune list prints what "
+                                 "you know; /aetherius rune unlock takes one without cheating the "
+                                 "quest that grants it.")
+L["aetherius.guide.world.title"] = "The Shattered Sky"
+L["aetherius.guide.world.p1"] = ("The Shattered Sky is an Aetherius dimension with ordinary, "
+                                 "walkable ground: Starlit Meadows, the broken highlands of the "
+                                 "Shattered Sky itself, and the Blighted Barrens where the rot has "
+                                 "taken hold.")
+L["aetherius.guide.world.p2"] = ("To get there the honest way, place four Sky-Rift Anchors within "
+                                 "twelve blocks of each other and socket a different Elemental "
+                                 "Heart into each; the portal opens in the middle of the ring.")
+L["aetherius.guide.world.p3"] = ("Or use /aetherius dimension to travel, and /aetherius dimension "
+                                 "return to come back. You always arrive on solid ground.")
+L["aetherius.guide.world.p4"] = ("The Barrens spread blight over time; /aetherius blight info "
+                                 "reports the current world state. An Aether Altar rite burns it "
+                                 "back, and an Aether Fountain refills mana and bleeds off tension.")
+L["aetherius.guide.boss.title"] = "The Nox'Thal"
+L["aetherius.guide.boss.p1"] = ("Nox'Thal, the Star-Eater, circles the arena above the Shattered Sky "
+                                 "highlands. It has three phases and the bar at the top of the "
+                                 "screen changes colour with each one.")
+L["aetherius.guide.boss.p2"] = ("In its second phase it cannot be reached in the air: it summons "
+                                 "gravity anchors. Destroy every anchor and it is pulled down, and "
+                                 "from then on it can be hit.")
+L["aetherius.guide.boss.p3"] = ("The third phase is the Supernova. The sky goes black and the screen "
+                                 "dims to a slot - glowing Rune Lanterns are what you can still see, "
+                                 "so place them before the fight.")
+L["aetherius.guide.boss.p4"] = ("Between phases it shields itself for a few seconds. Do not waste "
+                                 "cooldowns on the transition; it is invulnerable until the bar "
+                                 "settles into its new colour.")
+L["aetherius.guide.craft.title"] = "Forges, altars, lanterns"
+L["aetherius.guide.craft.p1"] = ("The Aether Forge (shards and lapis around deepslate) is where "
+                                 "Aetherius weapons and tools are made; anything the Astral Wand "
+                                 "cannot do, the forge can.")
+L["aetherius.guide.craft.p2"] = ("The Aether Altar runs the purification rite: build the ring it "
+                                 "asks for, then right-click it holding two Aether Blood (or one "
+                                 "Purified Starlight Elixir). It burns the blight out of the ground "
+                                 "around it and leaves you Star-Cleansed.")
+L["aetherius.guide.craft.p3"] = ("Everything else - the Celestial Pillar, the Telescope, the "
+                                 "Astrolabe, the Rune Lantern, the Aether Fountain - is craftable "
+                                 "from vanilla materials plus shards. Read the recipe book in the "
+                                 "Astral Wand's crafting output.")
+
 objectives = {
     "break_star_vein": "Break a Star-Vein vein",
     "collect_aether_shard": "Collect Aether Shards",

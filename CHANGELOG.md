@@ -4,6 +4,54 @@ All notable changes to Aetherius: Echoes of the Shattered Sky.
 The mod is in alpha: versions are `1.0.0-alpha.N`, each one a playable checkpoint rather than a
 finished product. Jars are attached to the matching GitHub release.
 
+## [1.0.0-alpha.9] — 2026-11-11
+
+### Fixed — the vanilla boss bar no longer sits under the custom one
+
+`NoxThalEntity` kept a `ServerBossBar` and added every tracking player to it, so the client drew
+the vanilla purple bar *and* the custom RGB overlay on top of each other. The `ServerBossBar` is
+gone; the custom HUD is fed by `BossEventS2CPacket` (phase colour, Supernova darkness) plus the
+entity's synced health, which is what it was already using for the pixels.
+
+### Added — a Guide tab in the Chronicle
+
+`K` now has a fifth tab, **Guide**, with five pages: getting started, runes and spells, the
+Shattered Sky, the Nox'Thal, and forges/altars/lanterns. The text lives in `GuidePages` and
+`en_us.json`, so `tools/check_lang.py` proves every key exists, and every statement was checked
+against the code it documents (wand recipe, `R`/`Shift+R`, the 50/100 tension thresholds, the
+four-anchor portal, the gravity-anchor grounding, the invulnerable phase transition).
+
+### Changed — every texture regenerated
+
+`tools/generate_textures.py` was rewritten around three layers instead of flat colour fills:
+
+1. **tileable value noise** (`fbm`) for the material, so blocks do not seam;
+2. **structure** — ore clusters with rim + specular, a ragged grass lip, pillar flutes, forge
+   grille and rivets, lantern frame, item silhouettes;
+3. **lighting** — bevels on block faces, outlines and top-left highlights on items, vignettes.
+
+All 47 PNGs were regenerated, including the 64x64 entity skins, the 256x256 Nox'Thal atlas (same
+uv regions the model names) and the GUI bars.
+
+### Changed — the Shattered Sky generates normal terrain
+
+The floating-island field is gone. `ShatteredSkyChunkGenerator` now builds continental terrain
+from three value-noise octaves (`worldgen/SkyNoise`): hills, lowlands that flood at sea level 76,
+sand beaches, stone/deepslate layers, ore veins, and a flat plateau around the origin so arrivals
+and the boss arena always land on solid ground. Oaks grow in the meadows, celestial pillars stand
+in the highlands, mana lilies near grass.
+
+The dimension was using `minecraft:fixed` (a single biome). It now uses
+`aetherius:shattered_sky`, a custom `BiomeSource` whose regions come from the same noise the
+terrain uses - so all three biomes actually occur, and the biome always matches the ground:
+`starlit_meadows` low and green, `shattered_sky` above y 104, `blighted_barrens` wherever the
+blight field wins.
+
+### Still unverified
+
+Compile and packaging are CI-verified; no world has been created with `alpha.9` yet, so the new
+terrain, the biome distribution, the guide pages and the boss-bar fix are all pending a live run.
+
 ## [1.0.0-alpha.8] — 2026-11-11
 
 ### Changed — the Nox'Thal is a GeckoLib model now

@@ -3,8 +3,12 @@
   "generator": {
     "type": "aetherius:shattered_sky",
     "biome_source": {
-      "type": "minecraft:fixed",
-      "biome": "aetherius:shattered_sky"
+      "type": "aetherius:shattered_sky",
+      "biomes": [
+        "aetherius:starlit_meadows",
+        "aetherius:shattered_sky",
+        "aetherius:blighted_barrens"
+      ]
     }
   }
 }

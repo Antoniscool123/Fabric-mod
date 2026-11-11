@@ -8,7 +8,9 @@ public enum Chapter {
     ACT_I("act_i", 1, "aetherius.chronicle.chapter.act_i"),
     ACT_II("act_ii", 2, "aetherius.chronicle.chapter.act_ii"),
     ACT_III("act_iii", 3, "aetherius.chronicle.chapter.act_iii"),
-    APPENDIX("appendix", 0, "aetherius.chronicle.chapter.appendix");
+    APPENDIX("appendix", 0, "aetherius.chronicle.chapter.appendix"),
+    /** How-to-play pages. Always unlocked, no quests, rendered by GuidePages. */
+    GUIDE("guide", 0, "aetherius.chronicle.chapter.guide");
 
     private final String id;
     private final int act;

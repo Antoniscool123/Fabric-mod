@@ -1,6 +1,8 @@
 package com.aetherius.dimension;
 
 import com.aetherius.registry.ModBlocks;
+import com.aetherius.worldgen.ShatteredSkyRegion;
+import com.aetherius.worldgen.SkyNoise;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.block.BlockState;
@@ -9,6 +11,8 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.ChunkRegion;
+import net.minecraft.world.HeightLimitView;
+import net.minecraft.world.Heightmap;
 import net.minecraft.world.StructureWorldAccess;
 import net.minecraft.world.biome.source.BiomeSource;
 import net.minecraft.world.chunk.Chunk;
@@ -16,37 +20,48 @@ import net.minecraft.world.gen.StructureAccessor;
 import net.minecraft.world.gen.chunk.Blender;
 import net.minecraft.world.gen.chunk.ChunkGenerator;
 import net.minecraft.world.gen.noise.NoiseConfig;
-import net.minecraft.world.HeightLimitView;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
 /**
- * Procedural generator for <b>The Shattered Sky</b>: an archipelago of floating islands in
- * an otherwise empty sky.
+ * Generator for <b>The Shattered Sky</b>: ordinary, walkable terrain with water, beaches, hills
+ * and three Aetherius biomes.
  *
- * <h2>Algorithm</h2>
- * The world is divided into 56x56-block cells. Each cell deterministically hashes to at most
- * one island (centre, radius, altitude). A column's surface height is the tallest island
- * surface among the 3x3 cells around it, so islands can overlap into ridges without needing
- * a noise field. Cell (0,0) is pinned to a large spawn island so portal arrivals always land
- * somewhere solid.
+ * <h2>Terrain</h2>
+ * A column's height is a sum of three value-noise octaves ({@link SkyNoise}): a slow continental
+ * field, a hill field and a fine detail field, offset so the average surface sits a few blocks
+ * above {@link #SEA_LEVEL}. Low ground floods, so the dimension has real coastlines instead of the
+ * endless island field it used to have. A plateau is forced around the origin so portal arrivals
+ * (and the arena) always land on solid, flat ground.
+ *
+ * <h2>Biomes</h2>
+ * {@link ShatteredSkyRegion#at(int, int)} chooses the region from the same noise, and this class
+ * uses it for the surface blocks too - which is why a biome always matches the ground under it.
+ * The biome source is {@code aetherius:shattered_sky} ({@code ShatteredSkyBiomeSource}).
+ *
+ * <h2>Decoration</h2>
+ * {@link #generateFeatures} plants oaks in the meadows, standing stones in the highlands and mana
+ * lilies near water. It only ever writes inside the chunk it is given, so it can never touch a
+ * neighbouring chunk that has not been generated yet.
  *
  * <h2>Version note</h2>
  * The chunk-generator contract changes between Minecraft versions. If a mapping bump breaks
- * compilation, the methods to re-check first are {@code populateNoise},
- * {@code generateFeatures} and {@code buildSurface} - their signatures are the volatile
- * part, not the island maths.
+ * compilation, the volatile parts are {@code populateNoise}, {@code generateFeatures},
+ * {@code buildSurface} and {@code getColumnSample} - not the height maths.
  */
 public class ShatteredSkyChunkGenerator extends ChunkGenerator {
 
     public static final int MIN_Y = 0;
     public static final int HEIGHT = 256;
-    public static final int SEA_LEVEL = 90;
-    public static final int CELL_SIZE = 56;
+    public static final int SEA_LEVEL = 76;
+    /** Kept for callers that ask "is there ground here?" - this generator always answers. */
     public static final int NO_SURFACE = Integer.MIN_VALUE;
+    /** Radius of the flat spawn plateau around the origin. */
+    private static final int SPAWN_PLATEAU = 72;
+    private static final int SPAWN_PLATEAU_HEIGHT = 92;
 
-    /** World seed, pushed in by the mod initialiser so island placement is deterministic. */
+    /** World seed, pushed in by the mod initialiser so terrain is deterministic per world. */
     private static volatile long worldSeed;
 
     public static void setWorldSeed(long seed) {
@@ -72,86 +87,35 @@ public class ShatteredSkyChunkGenerator extends ChunkGenerator {
     }
 
     // =====================================================================
-    //  Island field (shared with the teleporter)
+    //  Height field (shared with the teleporter, the biome regions and the boss arena)
     // =====================================================================
 
-    public record Island(int centerX, int centerZ, int radius, int baseY) {
-    }
-
-    /** Deterministic 0..1 hash per (cell, seed). */
-    private static double hash01(int cellX, int cellZ, long seed, int salt) {
-        long h = seed ^ (cellX * 0x9E3779B97F4A7C15L) ^ (cellZ * 0xC2B2AE3D27D4EB4FL) ^ (salt * 0x165667B19E3779F9L);
-        h ^= (h >>> 33);
-        h *= 0xff51afd7ed558ccdL;
-        h ^= (h >>> 33);
-        h *= 0xc4ceb9fe1a85ec53L;
-        h ^= (h >>> 33);
-        return (h >>> 11) * 0x1.0p-53;
-    }
-
-    public static Island cellIsland(int cellX, int cellZ, long seed) {
-        if (cellX == 0 && cellZ == 0) {
-            return new Island(0, 0, 26, 100);
-        }
-        double presence = hash01(cellX, cellZ, seed, 1);
-        if (presence < 0.18) {
-            return null; // sparse gaps make the archipelago feel broken
-        }
-        int centerX = cellX * CELL_SIZE + (int) (hash01(cellX, cellZ, seed, 2) * (CELL_SIZE - 28)) + 14;
-        int centerZ = cellZ * CELL_SIZE + (int) (hash01(cellX, cellZ, seed, 3) * (CELL_SIZE - 28)) + 14;
-        int radius = 9 + (int) (hash01(cellX, cellZ, seed, 4) * 15);
-        int baseY = 62 + (int) (hash01(cellX, cellZ, seed, 5) * 68);
-        return new Island(centerX, centerZ, radius, baseY);
-    }
-
-    /** @return the surface Y of the tallest island at this column, or {@link #NO_SURFACE}. */
+    /**
+     * Surface height of a column, ignoring water.
+     *
+     * @return the Y of the top solid block; never below {@link #MIN_Y}+1
+     */
     public static int surfaceHeight(int x, int z, long seed) {
-        int cellX = Math.floorDiv(x, CELL_SIZE);
-        int cellZ = Math.floorDiv(z, CELL_SIZE);
-        int best = NO_SURFACE;
-        for (int dx = -1; dx <= 1; dx++) {
-            for (int dz = -1; dz <= 1; dz++) {
-                Island island = cellIsland(cellX + dx, cellZ + dz, seed);
-                if (island == null) {
-                    continue;
-                }
-                double distance = Math.sqrt(Math.pow(x - island.centerX, 2) + Math.pow(z - island.centerZ, 2));
-                if (distance > island.radius) {
-                    continue;
-                }
-                double falloff = 1.0 - (distance / island.radius);
-                // Undulating plateau + a jagged rim that reads as shattered rock.
-                double ripple = Math.sin(x * 0.21 + island.centerX) * Math.cos(z * 0.17 + island.centerZ) * 2.5;
-                int surface = (int) Math.round(island.baseY + falloff * 9.0 + ripple);
-                best = Math.max(best, surface);
-            }
+        double continent = SkyNoise.fbm(x, z, seed ^ 0xA17L, 0.0035, 4);
+        double hills = SkyNoise.fbm(x, z, seed ^ 0xB29L, 0.012, 3);
+        double detail = SkyNoise.fbm(x, z, seed ^ 0xC33L, 0.05, 2);
+        double height = 46.0 + continent * 52.0 + hills * 16.0 + detail * 5.0;
+
+        // Flat spawn plateau: a smooth bowl-free bump so the first teleport always lands well.
+        double distance = Math.hypot(x, z);
+        if (distance < SPAWN_PLATEAU) {
+            double lift = 1.0 - distance / SPAWN_PLATEAU;
+            height = Math.max(height, 56.0 + (SPAWN_PLATEAU_HEIGHT - 56.0) * lift * lift);
         }
-        return best;
+        return (int) Math.round(MathHelper.clamp(height, SEA_LEVEL - 24.0, HEIGHT - 12.0));
     }
 
-    /** Nearest island centre to a point - used to place arrivals safely. */
+    /** Solid, dry arrival position above a column; used by the teleporter's fallback. */
     public static BlockPos nearestIslandCentre(double x, double z, long seed) {
-        int cellX = Math.floorDiv((int) Math.floor(x), CELL_SIZE);
-        int cellZ = Math.floorDiv((int) Math.floor(z), CELL_SIZE);
-        Island best = null;
-        double bestDistance = Double.MAX_VALUE;
-        for (int dx = -2; dx <= 2; dx++) {
-            for (int dz = -2; dz <= 2; dz++) {
-                Island island = cellIsland(cellX + dx, cellZ + dz, seed);
-                if (island == null) {
-                    continue;
-                }
-                double distance = Math.pow(x - island.centerX, 2) + Math.pow(z - island.centerZ, 2);
-                if (distance < bestDistance) {
-                    bestDistance = distance;
-                    best = island;
-                }
-            }
-        }
-        if (best == null) {
-            return new BlockPos(0, 104, 0);
-        }
-        return new BlockPos(best.centerX, best.baseY + 8, best.centerZ);
+        int blockX = (int) Math.floor(x);
+        int blockZ = (int) Math.floor(z);
+        int surface = Math.max(surfaceHeight(blockX, blockZ, seed), SEA_LEVEL) + 2;
+        return new BlockPos(blockX, surface, blockZ);
     }
 
     // =====================================================================
@@ -162,74 +126,138 @@ public class ShatteredSkyChunkGenerator extends ChunkGenerator {
     public CompletableFuture<Chunk> populateNoise(Executor executor, Blender blender, NoiseConfig noiseConfig,
                                                   StructureAccessor structureAccessor, Chunk chunk) {
         return CompletableFuture.supplyAsync(() -> {
-            generateIslands(chunk, worldSeed);
+            generateTerrain(chunk, worldSeed);
             return chunk;
         }, executor);
     }
 
-    private void generateIslands(Chunk chunk, long seed) {
+    private void generateTerrain(Chunk chunk, long seed) {
         ChunkPos chunkPos = chunk.getPos();
         BlockState stone = Blocks.STONE.getDefaultState();
         BlockState deepslate = Blocks.DEEPSLATE.getDefaultState();
+        BlockState dirt = Blocks.DIRT.getDefaultState();
+        BlockState sand = Blocks.SAND.getDefaultState();
+        BlockState gravel = Blocks.GRAVEL.getDefaultState();
+        BlockState water = Blocks.WATER.getDefaultState();
+        BlockState bedrock = Blocks.BEDROCK.getDefaultState();
         BlockState grass = ModBlocks.STARLIT_GRASS_BLOCK.getDefaultState();
-        BlockState air = Blocks.AIR.getDefaultState();
+        BlockState ash = ModBlocks.STAR_ASH.getDefaultState();
+        BlockState coarseDirt = Blocks.COARSE_DIRT.getDefaultState();
+        BlockState bloodOre = ModBlocks.AETHER_BLOOD_ORE.getDefaultState();
+        BlockState veinOre = ModBlocks.STAR_VEIN_ORE.getDefaultState();
 
         for (int localX = 0; localX < 16; localX++) {
             for (int localZ = 0; localZ < 16; localZ++) {
                 int worldX = chunkPos.getStartX() + localX;
                 int worldZ = chunkPos.getStartZ() + localZ;
                 int surface = surfaceHeight(worldX, worldZ, seed);
-                if (surface == NO_SURFACE || surface <= MIN_Y + 2) {
-                    continue;
+                ShatteredSkyRegion region = ShatteredSkyRegion.at(worldX, worldZ);
+                boolean shore = surface <= SEA_LEVEL + 2;
+
+                // Top block: sand on the shoreline, otherwise the biome's own surface.
+                BlockState top;
+                BlockState filler;
+                if (shore) {
+                    top = sand;
+                    filler = sand;
+                } else {
+                    switch (region) {
+                        case HIGHLANDS -> {
+                            top = ash;
+                            filler = gravel;
+                        }
+                        case BARRENS -> {
+                            top = ash;
+                            filler = coarseDirt;
+                        }
+                        default -> {
+                            top = grass;
+                            filler = dirt;
+                        }
+                    }
                 }
-                int bottom = Math.max(MIN_Y + 1, surface - 20);
-                for (int y = bottom; y <= surface; y++) {
+
+                chunk.setBlockState(new BlockPos(worldX, MIN_Y, worldZ), bedrock, false);
+                for (int y = MIN_Y + 1; y <= surface; y++) {
                     BlockPos pos = new BlockPos(worldX, y, worldZ);
+                    BlockState state;
                     if (y == surface) {
-                        chunk.setBlockState(pos, grass, false);
-                    } else if (y < bottom + 3) {
-                        chunk.setBlockState(pos, stone, false);
-                    } else if (y < bottom + 12) {
-                        chunk.setBlockState(pos, deepslate, false);
+                        state = top;
+                    } else if (y >= surface - 3) {
+                        state = filler;
+                    } else if (y < 32) {
+                        state = deepslate;
                     } else {
-                        chunk.setBlockState(pos, stone, false);
+                        state = stone;
                     }
-                    // Aether-Blood veins in the deep core of larger islands.
-                    if (y < bottom + 6 && ((worldX * 31 + y * 17 + worldZ * 13) & 63) == 0) {
-                        chunk.setBlockState(pos, ModBlocks.AETHER_BLOOD_ORE.getDefaultState(), false);
+                    // Ores, keyed off a coordinate hash so a vein is reproducible from the seed.
+                    if (state == stone || state == deepslate) {
+                        int roll = oreRoll(worldX, y, worldZ, seed);
+                        if (roll == 0 && y > 18 && y < surface - 6) {
+                            state = veinOre;
+                        } else if (roll == 1 && y < 34) {
+                            state = bloodOre;
+                        }
                     }
+                    chunk.setBlockState(pos, state, false);
                 }
-                // Ensure nothing floats beneath the island: clear a ragged underside.
-                for (int y = bottom - 1; y > MIN_Y; y--) {
-                    BlockPos pos = new BlockPos(worldX, y, worldZ);
-                    if (!chunk.getBlockState(pos).isAir()) {
-                        chunk.setBlockState(pos, air, false);
+
+                // Water, and the sea floor beneath it.
+                if (surface < SEA_LEVEL) {
+                    for (int y = surface + 1; y <= SEA_LEVEL; y++) {
+                        chunk.setBlockState(new BlockPos(worldX, y, worldZ), water, false);
                     }
                 }
             }
         }
     }
 
-    @Override
-    public int getHeight(int x, int z, net.minecraft.world.Heightmap.Type heightmap,
-                         HeightLimitView world, NoiseConfig noiseConfig) {
-        if (heightmap == net.minecraft.world.Heightmap.Type.WORLD_SURFACE_WG
-                || heightmap == net.minecraft.world.Heightmap.Type.OCEAN_FLOOR_WG) {
-            return Math.max(world.getBottomY(), surfaceHeight(x, z, worldSeed()));
+    /** 0 = star-vein, 1 = aether-blood, -1 = plain stone. Roughly 1 vein block in 230. */
+    private static int oreRoll(int x, int y, int z, long seed) {
+        double roll = SkyNoise.hash(x * 7 + z * 13, y * 31, seed ^ 0x0A17EL);
+        if (roll < 0.0022) {
+            return 0;
         }
-        return Math.max(world.getBottomY(), surfaceHeight(x, z, worldSeed()) + 1);
+        return roll > 0.9978 ? 1 : -1;
+    }
+
+    // =====================================================================
+    //  Queries used by vanilla and by our own code
+    // =====================================================================
+
+    @Override
+    public int getHeight(int x, int z, Heightmap.Type heightmap, HeightLimitView world, NoiseConfig noiseConfig) {
+        int surface = surfaceHeight(x, z, worldSeed);
+        int top = Math.max(surface, SEA_LEVEL);
+        boolean surfaceType = heightmap == Heightmap.Type.WORLD_SURFACE_WG
+                || heightmap == Heightmap.Type.OCEAN_FLOOR_WG
+                || heightmap == Heightmap.Type.WORLD_SURFACE
+                || heightmap == Heightmap.Type.OCEAN_FLOOR;
+        // MOTION_BLOCKING and friends want the first *free* Y, i.e. one above the top block.
+        return Math.max(world.getBottomY(), surfaceType ? top : top + 1);
     }
 
     @Override
     public net.minecraft.world.gen.chunk.VerticalBlockSample getColumnSample(
             int x, int z, HeightLimitView world, NoiseConfig noiseConfig) {
         int bottom = world.getBottomY();
+        int surface = surfaceHeight(x, z, worldSeed);
         BlockState[] states = new BlockState[world.getHeight()];
-        int surface = surfaceHeight(x, z, worldSeed());
         for (int i = 0; i < states.length; i++) {
-            states[i] = bottom + i <= surface
-                    ? ModBlocks.STAR_ASH.getDefaultState()
-                    : Blocks.AIR.getDefaultState();
+            int y = bottom + i;
+            if (y < MIN_Y) {
+                states[i] = Blocks.VOID_AIR.getDefaultState();
+            } else if (y == MIN_Y) {
+                states[i] = Blocks.BEDROCK.getDefaultState();
+            } else if (y <= surface) {
+                states[i] = y == surface
+                        ? ModBlocks.STARLIT_GRASS_BLOCK.getDefaultState()
+                        : Blocks.STONE.getDefaultState();
+            } else if (y <= SEA_LEVEL) {
+                states[i] = Blocks.WATER.getDefaultState();
+            } else {
+                states[i] = Blocks.AIR.getDefaultState();
+            }
         }
         return new net.minecraft.world.gen.chunk.VerticalBlockSample(bottom, states);
     }
@@ -237,31 +265,99 @@ public class ShatteredSkyChunkGenerator extends ChunkGenerator {
     @Override
     public void buildSurface(ChunkRegion region, StructureAccessor structures,
                              NoiseConfig noiseConfig, Chunk chunk) {
-        // Surface is authored in generateIslands; nothing to smooth here.
+        // The surface is authored in generateTerrain; nothing to smooth here.
     }
 
     @Override
     public void carve(ChunkRegion chunkRegion, long seed, NoiseConfig noiseConfig,
                       net.minecraft.world.biome.source.BiomeAccess biomeAccess, StructureAccessor structureAccessor,
                       Chunk chunk, net.minecraft.world.gen.GenerationStep.Carver carverStep) {
-        // No caves: the Shattered Sky's interiors are sealed ruins.
-    }
-
-    @Override
-    public void getDebugHudText(java.util.List<String> text, NoiseConfig noiseConfig, BlockPos pos) {
-        text.add("Aetherius: Shattered Sky (island field, seed " + worldSeed() + ")");
+        // No carvers: the dimension ships an empty carver list, so caves are simply not carved.
     }
 
     @Override
     public void populateEntities(ChunkRegion region) {
-        // Spawns are handled by the biome spawner / structure features.
+        // Spawns are handled by the biome spawners and the spawn restrictions.
     }
+
+    // =====================================================================
+    //  Decoration (trees, standing stones, lilies)
+    // =====================================================================
 
     @Override
     public void generateFeatures(StructureWorldAccess world, Chunk chunk, StructureAccessor structureAccessor) {
-        // Configured features for this dimension are placed by the biome's feature list.
-        // Keeping this empty (instead of delegating) avoids double-placing island decor.
+        ChunkPos chunkPos = chunk.getPos();
+        BlockState log = Blocks.OAK_LOG.getDefaultState();
+        BlockState leaves = Blocks.OAK_LEAVES.getDefaultState();
+        BlockState pillar = ModBlocks.CELESTIAL_PILLAR.getDefaultState();
+        BlockState lily = ModBlocks.MANA_LILY.getDefaultState();
+
+        // Stay a few blocks inside the chunk: a tree's canopy is 2 wide, and writing outside the
+        // chunk that is currently being generated is how neighbour chunks get corrupted.
+        for (int localX = 3; localX < 13; localX++) {
+            for (int localZ = 3; localZ < 13; localZ++) {
+                int worldX = chunkPos.getStartX() + localX;
+                int worldZ = chunkPos.getStartZ() + localZ;
+                int surface = surfaceHeight(worldX, worldZ, worldSeed);
+                if (surface < SEA_LEVEL + 1) {
+                    continue;
+                }
+                ShatteredSkyRegion region = ShatteredSkyRegion.at(worldX, worldZ);
+                double roll = SkyNoise.hash(worldX, worldZ, worldSeed ^ 0xF00DL);
+                BlockPos base = new BlockPos(worldX, surface + 1, worldZ);
+
+                if (region == ShatteredSkyRegion.MEADOWS && roll < 0.014) {
+                    placeOak(world, base, log, leaves, worldX, worldZ);
+                } else if (region == ShatteredSkyRegion.HIGHLANDS && roll > 0.995) {
+                    placeStandingStone(world, base, pillar);
+                } else if (region == ShatteredSkyRegion.MEADOWS && roll > 0.972 && roll < 0.976) {
+                    if (world.getBlockState(base.down()).isOf(ModBlocks.STARLIT_GRASS_BLOCK)) {
+                        world.setBlockState(base, lily, 2);
+                    }
+                }
+            }
+        }
     }
+
+    private void placeOak(StructureWorldAccess world, BlockPos base, BlockState log, BlockState leaves,
+                          int worldX, int worldZ) {
+        int height = 4 + (int) (SkyNoise.hash(worldX, worldZ, 0x7EEE5L) * 3.0);
+        for (int i = 0; i < height; i++) {
+            world.setBlockState(base.up(i), log, 2);
+        }
+        BlockPos crown = base.up(height);
+        for (int dy = -2; dy <= 1; dy++) {
+            int radius = dy >= 1 ? 1 : 2;
+            for (int dx = -radius; dx <= radius; dx++) {
+                for (int dz = -radius; dz <= radius; dz++) {
+                    if (dy == 0 && dx == 0 && dz == 0) {
+                        continue;
+                    }
+                    if (Math.abs(dx) == radius && Math.abs(dz) == radius && dy >= 0) {
+                        continue; // trimmed corners read better than a cube
+                    }
+                    BlockPos leaf = crown.add(dx, dy, dz);
+                    if (world.getBlockState(leaf).isAir()) {
+                        world.setBlockState(leaf, leaves, 2);
+                    }
+                }
+            }
+        }
+    }
+
+    private void placeStandingStone(StructureWorldAccess world, BlockPos base, BlockState pillar) {
+        int height = 2 + (int) (SkyNoise.hash(base.getX(), base.getZ(), 0x5717EL) * 3.0);
+        for (int i = 0; i < height; i++) {
+            BlockPos pos = base.up(i);
+            if (world.getBlockState(pos).isAir()) {
+                world.setBlockState(pos, pillar, 2);
+            }
+        }
+    }
+
+    // =====================================================================
+    //  Shape
+    // =====================================================================
 
     @Override
     public int getWorldHeight() {
@@ -280,7 +376,7 @@ public class ShatteredSkyChunkGenerator extends ChunkGenerator {
 
     @Override
     public int getSpawnHeight(HeightLimitView world) {
-        return 104;
+        return Math.max(surfaceHeight(0, 0, worldSeed) + 2, SEA_LEVEL + 3);
     }
 
     /** Slight altitude-based gravity compensation for procedural decoration helpers. */

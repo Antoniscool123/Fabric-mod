@@ -1,6 +1,7 @@
 package com.aetherius.worldgen;
 
 import com.aetherius.dimension.ShatteredSkyChunkGenerator;
+import com.aetherius.worldgen.ShatteredSkyBiomeSource;
 import com.aetherius.registry.ModBlocks;
 import com.aetherius.util.Aeth;
 import com.aetherius.worldgen.feature.ManaLilyPatchFeature;
@@ -68,7 +69,10 @@ public final class ModWorldGen {
         Registry.register(Registries.FEATURE, Aeth.id("starlight_observatory"), STARLIGHT_OBSERVATORY);
         Registry.register(Registries.FEATURE, Aeth.id("mana_lily_patch"), MANA_LILY_PATCH);
 
-        // The dimension's generator must be known before the dimension JSON is parsed.
+        // The dimension's biome source and generator must both be known before the dimension
+        // JSON is parsed, or the dimension fails to load and no world can be created.
+        Registry.register(Registries.BIOME_SOURCE, Aeth.id("shattered_sky"),
+                ShatteredSkyBiomeSource.CODEC);
         Registry.register(Registries.CHUNK_GENERATOR, Aeth.id("shattered_sky"),
                 ShatteredSkyChunkGenerator.CODEC);
 

@@ -201,13 +201,20 @@ ticked from the server tick event.
 
 - Dimension `aetherius:shattered_sky`: type with `min_y 0`, `height 256`, `fixed_time 15000`,
   ambient light 0.14, `effects: the_end`, no beds/anchors/respawn.
-- `ShatteredSkyChunkGenerator` generates the archipelago: a noise-free island field built
-  from hashed cell positions, with a fixed seed bound at `SERVER_STARTED`. It extends
-  `ChunkGenerator` and registers its own codec.
-- Biomes: `starlit_meadows` (sky-blue, observatories + mana lilies), `shattered_sky`
-  (night, mantas + specters), `blighted_barrens` (dark, abominations).
-- Features: `starlight_observatory` (surface structure, once per 3×3 region via a placement
-  modifier), `mana_lily_patch` (vegetal decoration).
+- `ShatteredSkyChunkGenerator` generates **normal, walkable terrain**: three value-noise
+  octaves (`worldgen/SkyNoise`) give a continental field, hills and detail, with sea level 76,
+  beaches, water and a flat plateau around the origin so portal arrivals always land on ground.
+  Surface blocks come from `ShatteredSkyRegion`, the same helper the biome source uses.
+- Decoration is hand-placed in `generateFeatures` (oaks in the meadows, celestial pillars as
+  standing stones in the highlands, mana lilies near grass). It only writes inside the chunk
+  being generated, so it can never touch a neighbour that has not been generated yet.
+- Biomes are chosen by `ShatteredSkyBiomeSource` (`aetherius:shattered_sky`), a custom
+  `BiomeSource` with its own codec that ignores the vanilla climate sampler: the blight noise
+  carves `blighted_barrens`, everything above y 104 is `shattered_sky`, the rest is
+  `starlit_meadows`. Because the terrain uses the same function, a biome always matches the
+  ground under it.
+- The dimension JSON lists the three biomes in a fixed order - meadow, highland, barrens -
+  which is the contract of the biome source's codec.
 - Overworld ores are injected with `BiomeModifications.addFeature` over
   `BiomeSelectors.foundInOverworld()`.
 - Overworld *biome* injection is out of scope for vanilla Fabric — see
